@@ -15,6 +15,7 @@ const getAIResponse = async (prompt) => {
   try {
     const anthropic = new Anthropic({
       apiKey: apiKey,
+      baseURL: process.env.CLAUDE_API_URL || 'https://api.anthropic.com/v1',
     });
 
     const response = await anthropic.messages.create({
