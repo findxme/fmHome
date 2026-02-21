@@ -25,18 +25,18 @@ jobs:
             set -e
             DEPLOY_PATH="${{ secrets.DEPLOY_PATH || '/opt/fmhome' }}"
 
-            # 拉取最新代码
-            if [ -d "${DEPLOY_PATH}/.git" ]; then
-              echo ">>> 更新代码..."
-              cd ${DEPLOY_PATH}
-              git pull origin main
-            else
-              echo ">>> 首次克隆代码..."
-              git clone https://github.com/findxme/fmHome.git ${DEPLOY_PATH}
-              cd ${DEPLOY_PATH}
-            fi
-
+            # 拉取最新代码（兼容目录已存在但非 git 仓库的情况）
+            mkdir -p ${DEPLOY_PATH}
             cd ${DEPLOY_PATH}
+            if [ ! -d ".git" ]; then
+              echo ">>> 初始化仓库..."
+              git init
+              git remote add origin https://github.com/findxme/fmHome.git
+            else
+              echo ">>> 更新代码..."
+            fi
+            git fetch origin main
+            git reset --hard origin/main
 
             # 写入环境变量（用 printf 避免 heredoc 缩进问题）
             echo ">>> 写入 .env..."
