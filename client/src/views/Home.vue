@@ -58,14 +58,6 @@
           >
             🎲 今天吃啥
           </button>
-
-          <!-- 成就 -->
-          <button
-            @click="$router.push('/achievements')"
-            class="flex-1 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl shadow-lg hover:shadow-xl active:scale-95 transition-all text-sm font-medium"
-          >
-            🏆 成就
-          </button>
         </div>
 
       </div>
@@ -231,18 +223,20 @@ const showSearch = ref(false)
 // 快捷场景
 const scenes = [
   { id: 'all', name: '全部', icon: '📋' },
-  { id: 'quick', name: '快手菜', icon: '⚡' },
-  { id: 'meat', name: '硬菜', icon: '🥩' },
-  { id: 'vegetable', name: '素食', icon: '🥗' },
-  { id: 'soup', name: '汤类', icon: '🍲' },
-  { id: 'breakfast', name: '早餐', icon: '🍳' },
-  { id: 'dessert', name: '甜品', icon: '🍰' },
+  { id: '早餐', name: '早餐', icon: '🍳' },
+  { id: '午餐', name: '午餐', icon: '🍱' },
+  { id: '晚餐', name: '晚餐', icon: '🍲' },
+  { id: '素菜', name: '素菜', icon: '🥗' },
+  { id: '汤类', name: '汤类', icon: '🍜' },
+  { id: '甜品', name: '甜品', icon: '🍰' },
 ]
 
 const selectedScene = ref('all')
 
 const selectScene = (id) => {
   selectedScene.value = selectedScene.value === id ? 'all' : id
+  // 收起搜索框
+  showSearch.value = false
 }
 
 const sceneLabel = computed(() => {
@@ -263,19 +257,9 @@ const filteredDishes = computed(() => {
     )
   }
 
-  // 场景过滤
-  if (selectedScene.value === 'quick') {
-    dishes = dishes.filter(d => d.cooking_time?.includes('15') || d.cooking_time?.includes('20') || d.cooking_time?.includes('30'))
-  } else if (selectedScene.value === 'meat') {
-    dishes = dishes.filter(d => d.category === '午餐' || d.category === '晚餐')
-  } else if (selectedScene.value === 'vegetable') {
-    dishes = dishes.filter(d => d.tags?.includes('素') || d.category === '素菜')
-  } else if (selectedScene.value === 'soup') {
-    dishes = dishes.filter(d => d.tags?.includes('汤'))
-  } else if (selectedScene.value === 'breakfast') {
-    dishes = dishes.filter(d => d.category === '早餐')
-  } else if (selectedScene.value === 'dessert') {
-    dishes = dishes.filter(d => d.tags?.includes('甜品') || d.category === '甜品')
+  // 分类过滤
+  if (selectedScene.value !== 'all') {
+    dishes = dishes.filter(d => d.category === selectedScene.value)
   }
 
   return dishes

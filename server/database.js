@@ -122,6 +122,18 @@ export function initDatabase() {
     )
   `);
 
+  // 购物车表
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS carts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      dish_id TEXT NOT NULL,
+      dish_name TEXT,
+      quantity INTEGER DEFAULT 1,
+      added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(dish_id)
+    )
+  `);
+
   // 烹饪记录表
   database.exec(`
     CREATE TABLE IF NOT EXISTS cooking_records (

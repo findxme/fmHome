@@ -8,7 +8,7 @@
       </div>
     </header>
 
-    <div class="max-w-4xl mx-auto px-4 py-6 space-y-6">
+    <div class="max-w-4xl mx-auto px-4 py-6 pb-24 space-y-6">
       <!-- 家庭成员 -->
       <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm transition-colors duration-300">
         <div class="flex items-center justify-between mb-4">

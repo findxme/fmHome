@@ -13,6 +13,7 @@ import menuRoutes from './routes/menu.js';
 import cookingRoutes from './routes/cooking.js';
 import achievementsRoutes from './routes/achievements.js';
 import familyRoutes from './routes/family.js';
+import cartRoutes from './routes/cart.js';
 
 dotenv.config();
 
@@ -53,6 +54,7 @@ app.use('/api/menu', menuRoutes);
 app.use('/api/cooking', cookingRoutes);
 app.use('/api/achievements', achievementsRoutes);
 app.use('/api/family', familyRoutes);
+app.use('/api/cart', cartRoutes);
 
 // 健康检查
 app.get('/api/health', (req, res) => {
