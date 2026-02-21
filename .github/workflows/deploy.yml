@@ -16,58 +16,62 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. 将代码同步到服务器并构建
-      - name: Sync code and build on server
+      # 2. 在 Actions runner 上构建 Docker 镜像（runner 可访问 Docker Hub）
+      - name: Build Docker image
+        run: |
+          docker build -t fmhome:latest .
+          echo "✅ 镜像构建完成"
+          docker images fmhome:latest
+
+      # 3. 导出并压缩镜像
+      - name: Export Docker image
+        run: |
+          docker save fmhome:latest | gzip > /tmp/fmhome.tar.gz
+          ls -lh /tmp/fmhome.tar.gz
+
+      # 4. 设置 SSH 密钥
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p ${{ secrets.SERVER_PORT || '22' }} ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      # 5. 传输镜像到服务器
+      - name: Transfer image to server
+        run: |
+          scp -i ~/.ssh/deploy_key \
+              -P ${{ secrets.SERVER_PORT || '22' }} \
+              -o StrictHostKeyChecking=no \
+              /tmp/fmhome.tar.gz \
+              ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}:/tmp/fmhome.tar.gz
+          echo "✅ 镜像传输完成"
+
+      # 6. 在服务器上加载镜像并启动
+      - name: Load image and start container
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT || '22' }}
-          command_timeout: 30m
-          script: |
-            set -e
-            DEPLOY_PATH="${{ secrets.DEPLOY_PATH || '/opt/fmhome' }}"
-            mkdir -p ${DEPLOY_PATH}/repo
-
-      # 3. 通过 rsync 传输代码到服务器
-      - name: Sync code to server
-        uses: burnett01/rsync-deployments@7.0.1
-        with:
-          switches: -avzr --delete --exclude='.git' --exclude='node_modules' --exclude='server/data' --exclude='server/*.db*'
-          path: ./
-          remote_path: ${{ secrets.DEPLOY_PATH || '/opt/fmhome' }}/repo/
-          remote_host: ${{ secrets.SERVER_HOST }}
-          remote_port: ${{ secrets.SERVER_PORT || '22' }}
-          remote_user: ${{ secrets.SERVER_USERNAME }}
-          remote_key: ${{ secrets.SERVER_SSH_KEY }}
-
-      # 4. 在服务器上构建并启动
-      - name: Build and start on server
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          port: ${{ secrets.SERVER_PORT || '22' }}
-          command_timeout: 30m
+          command_timeout: 15m
           script: |
             set -e
             DEPLOY_PATH="${{ secrets.DEPLOY_PATH || '/opt/fmhome' }}"
 
-            echo ">>> 当前提交: $(cat ${DEPLOY_PATH}/repo/.git/COMMIT_EDITMSG 2>/dev/null || echo 'unknown')"
+            # 加载镜像
+            echo ">>> 加载 Docker 镜像..."
+            docker load < /tmp/fmhome.tar.gz
+            rm -f /tmp/fmhome.tar.gz
 
             # 停止旧容器
             echo ">>> 停止旧容器..."
             cd ${DEPLOY_PATH}
             docker-compose down || true
 
-            # 重新构建镜像
-            echo ">>> 构建 Docker 镜像..."
-            docker build -t fmhome:latest ${DEPLOY_PATH}/repo
-
             # 启动新容器
-            echo ">>> 启动容器..."
+            echo ">>> 启动新容器..."
             docker-compose up -d
 
             # 清理旧镜像
@@ -77,4 +81,6 @@ jobs:
             echo ">>> 等待服务启动..."
             sleep 10
             docker-compose ps
-            curl -sf http://localhost:3001/api/health && echo "✅ 部署成功！健康检查通过" || (echo "❌ 健康检查失败" && docker-compose logs --tail=50 app && exit 1)
+            curl -sf http://localhost:3001/api/health \
+              && echo "✅ 部署成功！" \
+              || (echo "❌ 健康检查失败" && docker-compose logs --tail=50 && exit 1)
