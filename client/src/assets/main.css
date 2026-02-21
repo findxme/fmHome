@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Segoe UI', Roboto, sans-serif;
+  @apply bg-gray-50;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 禁止文本选择 */
+* {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* 允许输入框选择 */
+input, textarea {
+  -webkit-user-select: auto;
+  user-select: auto;
+}
+
+/* 触摸优化 */
+button, a, [role="button"] {
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+  touch-action: manipulation;
+}
+
+/* 移除iOS输入框圆角 */
+input, textarea {
+  -webkit-appearance: none;
+  border-radius: 0;
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+/* 安全区域适配 */
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 卡片悬停效果 */
+.card-hover {
+  @apply transition-all duration-300;
+}
+
+/* 按钮样式 */
+.btn-primary {
+  @apply bg-primary-500 text-white px-4 py-2 rounded-lg transition-colors;
+}
+
+.btn-secondary {
+  @apply bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition-colors;
+}
+
+/* 移动端优化 */
+@media (max-width: 480px) {
+  html {
+    font-size: 14px;
+  }
+
+  .text-base {
+    font-size: 1rem;
+  }
+
+  .text-lg {
+    font-size: 1.1rem;
+  }
+
+  .text-xl {
+    font-size: 1.25rem;
+  }
+
+  .text-2xl {
+    font-size: 1.4rem;
+  }
+}
+
+/* 防止页面滚动穿透 */
+.fixed {
+  -webkit-overflow-scrolling: auto;
+}
