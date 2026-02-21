@@ -43,6 +43,8 @@ jobs:
           scp -i ~/.ssh/deploy_key \
               -P ${{ secrets.SERVER_PORT || '22' }} \
               -o StrictHostKeyChecking=no \
+              -o ConnectTimeout=15 \
+              -o BatchMode=yes \
               /tmp/fmhome.tar.gz \
               ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}:/tmp/fmhome.tar.gz
           echo "✅ 镜像传输完成"
