@@ -5,14 +5,10 @@ on:
     branches:
       - main
       - master
-  workflow_dispatch: # 允许手动触发
-
-env:
-  DOCKER_IMAGE_NAME: fmhome
-  DOCKER_REGISTRY: ghcr.io # 使用 GitHub Container Registry
+  workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,110 +16,71 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. 设置 Docker Buildx
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      # 2. 在 Actions runner 上构建 Docker 镜像（runner 可访问 Docker Hub）
+      - name: Build Docker image
+        run: |
+          docker build -t fmhome:latest .
+          echo "✅ 镜像构建完成"
+          docker images fmhome:latest
 
-      # 3. 登录到容器镜像仓库
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.DOCKER_REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+      # 3. 导出并压缩镜像
+      - name: Export Docker image
+        run: |
+          docker save fmhome:latest | gzip > /tmp/fmhome.tar.gz
+          ls -lh /tmp/fmhome.tar.gz
 
-      # 可选：登录到 Docker Hub（如果使用 Docker Hub）
-      # - name: Log in to Docker Hub
-      #   uses: docker/login-action@v3
-      #   with:
-      #     username: ${{ secrets.DOCKER_USERNAME }}
-      #     password: ${{ secrets.DOCKER_PASSWORD }}
+      # 4. 设置 SSH 密钥
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p ${{ secrets.SERVER_PORT || '22' }} ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
 
-      # 4. 提取 Docker 元数据
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.DOCKER_REGISTRY }}/${{ github.repository_owner }}/${{ env.DOCKER_IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch
-            type=sha,prefix={{branch}}-
-            type=raw,value=latest,enable={{is_default_branch}}
+      # 5. 传输镜像到服务器
+      - name: Transfer image to server
+        run: |
+          scp -i ~/.ssh/deploy_key \
+              -P ${{ secrets.SERVER_PORT || '22' }} \
+              -o StrictHostKeyChecking=no \
+              /tmp/fmhome.tar.gz \
+              ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}:/tmp/fmhome.tar.gz
+          echo "✅ 镜像传输完成"
 
-      # 5. 构建并推送 Docker 镜像
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          platforms: linux/amd64
-
-      # 6. 部署到服务器
-      - name: Deploy to Server
+      # 6. 在服务器上加载镜像并启动
+      - name: Load image and start container
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          port: ${{ secrets.SERVER_PORT || 22 }}
+          port: ${{ secrets.SERVER_PORT || '22' }}
+          command_timeout: 15m
           script: |
-            # 切换到项目目录
-            cd ${{ secrets.DEPLOY_PATH || '/opt/fmhome' }}
+            set -e
+            DEPLOY_PATH="${{ secrets.DEPLOY_PATH || '/opt/fmhome' }}"
 
-            # 登录到 GitHub Container Registry
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${{ env.DOCKER_REGISTRY }} -u ${{ github.actor }} --password-stdin
+            # 加载镜像
+            echo ">>> 加载 Docker 镜像..."
+            docker load < /tmp/fmhome.tar.gz
+            rm -f /tmp/fmhome.tar.gz
 
-            # 拉取最新镜像
-            docker pull ${{ env.DOCKER_REGISTRY }}/${{ github.repository_owner }}/${{ env.DOCKER_IMAGE_NAME }}:latest
-
-            # 停止并删除旧容器
+            # 停止旧容器
+            echo ">>> 停止旧容器..."
+            cd ${DEPLOY_PATH}
             docker-compose down || true
 
             # 启动新容器
+            echo ">>> 启动新容器..."
             docker-compose up -d
 
-            # 清理未使用的镜像
+            # 清理旧镜像
             docker image prune -f
 
-            # 显示运行状态
+            # 等待并验证
+            echo ">>> 等待服务启动..."
+            sleep 10
             docker-compose ps
-
-      # 7. 通知部署结果（可选）
-      - name: Deployment notification
-        if: always()
-        run: |
-          if [ "${{ job.status }}" == "success" ]; then
-            echo "✅ 部署成功！"
-          else
-            echo "❌ 部署失败，请检查日志。"
-          fi
-
-  # 可选：运行测试
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: |
-          npm install
-          cd client && npm install
-          cd ../server && npm install
-
-      - name: Run tests
-        run: |
-          # 如果有测试脚本，在这里运行
-          echo "暂无测试用例"
-          # npm test
+            curl -sf http://localhost:3001/api/health \
+              && echo "✅ 部署成功！" \
+              || (echo "❌ 健康检查失败" && docker-compose logs --tail=50 && exit 1)
