@@ -12,58 +12,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. 检出代码
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      # 2. 在 Actions runner 上构建 Docker 镜像
-      - name: Build Docker image
-        run: |
-          docker build -t fmhome:latest .
-          echo "✅ 镜像构建完成"
-          docker images fmhome:latest
-
-      # 3. 导出并压缩镜像
-      - name: Export Docker image
-        run: |
-          docker save fmhome:latest | gzip > /tmp/fmhome.tar.gz
-          ls -lh /tmp/fmhome.tar.gz
-
-      # 4. 设置 SSH 密钥
-      - name: Setup SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p ${{ secrets.SERVER_PORT || '22' }} ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
-
-      # 5. 传输镜像到服务器
-      - name: Transfer image to server
-        run: |
-          scp -i ~/.ssh/deploy_key \
-              -P ${{ secrets.SERVER_PORT || '22' }} \
-              -o StrictHostKeyChecking=no \
-              -o ConnectTimeout=15 \
-              -o BatchMode=yes \
-              /tmp/fmhome.tar.gz \
-              ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}:/tmp/fmhome.tar.gz
-          echo "✅ 镜像传输完成"
-
-      # 6. 在服务器上写配置文件、加载镜像并启动
-      - name: Load image and start container
+      # 1. SSH 进服务器，拉代码，本地构建并启动
+      - name: Deploy on server
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT || '22' }}
-          command_timeout: 15m
+          command_timeout: 30m
           script: |
             set -e
             DEPLOY_PATH="${{ secrets.DEPLOY_PATH || '/opt/fmhome' }}"
 
-            # 创建部署目录
-            mkdir -p ${DEPLOY_PATH}/data ${DEPLOY_PATH}/logs
+            # 拉取最新代码
+            if [ -d "${DEPLOY_PATH}/.git" ]; then
+              echo ">>> 更新代码..."
+              cd ${DEPLOY_PATH}
+              git pull origin main
+            else
+              echo ">>> 首次克隆代码..."
+              git clone https://github.com/findxme/fmHome.git ${DEPLOY_PATH}
+              cd ${DEPLOY_PATH}
+            fi
 
             # 写入环境变量文件
             echo ">>> 写入 .env 配置..."
@@ -74,55 +45,21 @@ jobs:
             PORT=3001
             ENVEOF
 
-            # 写入服务器用 docker-compose.yml（使用预构建镜像，不在服务器上编译）
-            echo ">>> 写入 docker-compose.yml..."
-            cat > ${DEPLOY_PATH}/docker-compose.yml << 'COMPOSEEOF'
-            version: '3.8'
-            services:
-              app:
-                image: fmhome:latest
-                container_name: fmhome-app
-                restart: unless-stopped
-                ports:
-                  - "3001:3001"
-                env_file:
-                  - .env
-                volumes:
-                  - ./data:/app/server/data
-                  - ./logs:/app/server/logs
-                networks:
-                  - fmhome-network
-                healthcheck:
-                  test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
-                  interval: 30s
-                  timeout: 10s
-                  retries: 3
-                  start_period: 40s
-            networks:
-              fmhome-network:
-                driver: bridge
-            COMPOSEEOF
-
-            # 加载镜像
-            echo ">>> 加载 Docker 镜像..."
-            docker load < /tmp/fmhome.tar.gz
-            rm -f /tmp/fmhome.tar.gz
-
             # 停止旧容器
             echo ">>> 停止旧容器..."
             cd ${DEPLOY_PATH}
             docker-compose down || true
 
-            # 启动新容器
-            echo ">>> 启动新容器..."
-            docker-compose up -d
+            # 本地构建镜像并启动
+            echo ">>> 构建镜像并启动..."
+            docker-compose up --build -d
 
-            # 清理旧镜像
+            # 清理构建缓存
             docker image prune -f
 
             # 等待并验证
             echo ">>> 等待服务启动..."
-            sleep 10
+            sleep 15
             docker-compose ps
             curl -sf http://localhost:3001/api/health \
               && echo "✅ 部署成功！" \
