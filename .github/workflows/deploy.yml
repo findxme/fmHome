@@ -36,28 +36,26 @@ jobs:
               cd ${DEPLOY_PATH}
             fi
 
-            # 写入环境变量文件
-            echo ">>> 写入 .env 配置..."
-            cat > ${DEPLOY_PATH}/.env << 'ENVEOF'
-            CLAUDE_API_KEY=${{ secrets.CLAUDE_API_KEY }}
-            CLAUDE_API_URL=${{ secrets.CLAUDE_API_URL }}
-            NODE_ENV=production
-            PORT=3001
-            ENVEOF
+            cd ${DEPLOY_PATH}
+
+            # 写入环境变量（用 printf 避免 heredoc 缩进问题）
+            echo ">>> 写入 .env..."
+            printf 'CLAUDE_API_KEY=%s\nCLAUDE_API_URL=%s\nNODE_ENV=production\nPORT=3001\n' \
+              '${{ secrets.CLAUDE_API_KEY }}' \
+              '${{ secrets.CLAUDE_API_URL }}' > .env
 
             # 停止旧容器
             echo ">>> 停止旧容器..."
-            cd ${DEPLOY_PATH}
             docker-compose down || true
 
             # 本地构建镜像并启动
             echo ">>> 构建镜像并启动..."
             docker-compose up --build -d
 
-            # 清理构建缓存
+            # 清理旧镜像
             docker image prune -f
 
-            # 等待并验证
+            # 验证
             echo ">>> 等待服务启动..."
             sleep 15
             docker-compose ps
