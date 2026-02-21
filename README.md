@@ -127,6 +127,64 @@ fmHome/
 - Firefox (最新版本)
 - Edge (最新版本)
 
+## 🚀 生产部署
+
+本项目支持基于 Docker 的自动化部署流程。
+
+### 快速部署
+
+#### 使用 Docker Compose（推荐）
+
+```bash
+# 1. 克隆仓库
+git clone git@github.com:findxme/fmHome.git
+cd fmHome
+
+# 2. 配置环境变量
+cp .env.example .env
+nano .env  # 编辑配置
+
+# 3. 构建并启动
+docker-compose up -d
+
+# 4. 查看状态
+docker-compose ps
+docker-compose logs -f app
+```
+
+#### CI/CD 自动化部署
+
+推送代码到 `main` 分支时，GitHub Actions 会自动：
+1. 构建 Docker 镜像
+2. 推送到 GitHub Container Registry
+3. SSH 连接到服务器
+4. 拉取最新镜像并重启服务
+
+**详细配置步骤请参考：[DEPLOYMENT.md](./DEPLOYMENT.md)**
+
+### 服务器快速设置
+
+在服务器上运行以下命令快速安装环境：
+
+```bash
+# 下载并运行服务器初始化脚本
+curl -o server-setup.sh https://raw.githubusercontent.com/findxme/fmHome/main/server-setup.sh
+chmod +x server-setup.sh
+./server-setup.sh
+```
+
+### 部署文件说明
+
+| 文件 | 说明 |
+|------|------|
+| `Dockerfile` | Docker 镜像构建配置（多阶段构建） |
+| `docker-compose.yml` | 生产环境容器编排配置 |
+| `docker-compose.dev.yml` | 开发环境容器编排配置 |
+| `.github/workflows/deploy.yml` | GitHub Actions 自动化部署流程 |
+| `deploy.sh` | 服务器端部署脚本 |
+| `server-setup.sh` | 服务器环境初始化脚本 |
+| `DEPLOYMENT.md` | 详细的部署配置文档 |
+
 ## License
 
 MIT

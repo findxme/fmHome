@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # 主应用服务
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fmhome-app
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3001}:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY}
+    volumes:
+      # 持久化 SQLite 数据库
+      - ./data:/app/server/data
+      - ./logs:/app/server/logs
+    networks:
+      - fmhome-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Nginx 反向代理（可选，用于生产环境）
+  nginx:
+    image: nginx:alpine
+    container_name: fmhome-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./client/dist:/usr/share/nginx/html:ro
+    depends_on:
+      - app
+    networks:
+      - fmhome-network
+    profiles:
+      - production
+
+networks:
+  fmhome-network:
+    driver: bridge
+
+volumes:
+  data:
+  logs:

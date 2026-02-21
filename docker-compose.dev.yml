@@ -1,0 +1,28 @@
+# 开发环境 Docker Compose 配置
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fmhome-app-dev
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY}
+    volumes:
+      # 开发模式下挂载源代码，支持热重载
+      - ./server:/app/server
+      - ./client/dist:/app/client/dist
+      - /app/server/node_modules
+    command: node server/index.js
+    networks:
+      - fmhome-network
+
+networks:
+  fmhome-network:
+    driver: bridge
