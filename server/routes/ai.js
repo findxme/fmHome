@@ -15,7 +15,7 @@ const getAIResponse = async (prompt) => {
   try {
     const openai = new OpenAI({
       apiKey: apiKey,
-      baseURL: 'https://api.anthropic.com/v1', // 如果需要使用 Claude
+      baseURL: process.env.CLAUDE_API_URL || 'https://api.anthropic.com/v1',
     });
 
     const response = await openai.chat.completions.create({

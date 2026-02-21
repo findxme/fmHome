@@ -16,7 +16,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. 在 Actions runner 上构建 Docker 镜像（runner 可访问 Docker Hub）
+      # 2. 在 Actions runner 上构建 Docker 镜像
       - name: Build Docker image
         run: |
           docker build -t fmhome:latest .
@@ -47,7 +47,7 @@ jobs:
               ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}:/tmp/fmhome.tar.gz
           echo "✅ 镜像传输完成"
 
-      # 6. 在服务器上加载镜像并启动
+      # 6. 在服务器上写配置文件、加载镜像并启动
       - name: Load image and start container
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -59,6 +59,47 @@ jobs:
           script: |
             set -e
             DEPLOY_PATH="${{ secrets.DEPLOY_PATH || '/opt/fmhome' }}"
+
+            # 创建部署目录
+            mkdir -p ${DEPLOY_PATH}/data ${DEPLOY_PATH}/logs
+
+            # 写入环境变量文件
+            echo ">>> 写入 .env 配置..."
+            cat > ${DEPLOY_PATH}/.env << 'ENVEOF'
+            CLAUDE_API_KEY=${{ secrets.CLAUDE_API_KEY }}
+            CLAUDE_API_URL=${{ secrets.CLAUDE_API_URL }}
+            NODE_ENV=production
+            PORT=3001
+            ENVEOF
+
+            # 写入服务器用 docker-compose.yml（使用预构建镜像，不在服务器上编译）
+            echo ">>> 写入 docker-compose.yml..."
+            cat > ${DEPLOY_PATH}/docker-compose.yml << 'COMPOSEEOF'
+            version: '3.8'
+            services:
+              app:
+                image: fmhome:latest
+                container_name: fmhome-app
+                restart: unless-stopped
+                ports:
+                  - "3001:3001"
+                env_file:
+                  - .env
+                volumes:
+                  - ./data:/app/server/data
+                  - ./logs:/app/server/logs
+                networks:
+                  - fmhome-network
+                healthcheck:
+                  test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+                  interval: 30s
+                  timeout: 10s
+                  retries: 3
+                  start_period: 40s
+            networks:
+              fmhome-network:
+                driver: bridge
+            COMPOSEEOF
 
             # 加载镜像
             echo ">>> 加载 Docker 镜像..."
