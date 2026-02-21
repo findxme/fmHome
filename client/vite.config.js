@@ -22,27 +22,21 @@ export default defineConfig({
     // 代码分割优化
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vue-vendor': ['vue', 'vue-router', 'pinia'],
-          'ui-vendor': ['tailwindcss'],
-          'ai': ['@tensorflow/tfjs', '@tensorflow-models/mobilenet']
+        manualChunks: (id) => {
+          if (id.includes('node_modules/vue') || id.includes('node_modules/pinia') || id.includes('node_modules/vue-router')) {
+            return 'vue-vendor'
+          }
+          if (id.includes('node_modules')) {
+            return 'vendor'
+          }
         }
       }
     },
-    // 启用CSS代码分割
     cssCodeSplit: true,
-    // 启用源码映射（生产禁用）
     sourcemap: false,
-    // 压缩配置
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true
-      }
-    }
+    minify: 'esbuild',
+    chunkSizeWarningLimit: 500
   },
-  // 依赖优化
   optimizeDeps: {
     include: ['vue', 'vue-router', 'pinia', 'axios']
   }
