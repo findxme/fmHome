@@ -1,10 +1,10 @@
 import express from 'express';
 import { getDatabase } from '../database.js';
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 
 const router = express.Router();
 
-// Claude AI 集成（使用 OpenAI 兼容接口）
+// Claude AI 集成
 const getAIResponse = async (prompt) => {
   const apiKey = process.env.CLAUDE_API_KEY;
 
@@ -13,27 +13,23 @@ const getAIResponse = async (prompt) => {
   }
 
   try {
-    const openai = new OpenAI({
+    const anthropic = new Anthropic({
       apiKey: apiKey,
-      baseURL: 'https://api.anthropic.com/v1', // 如果需要使用 Claude
     });
 
-    const response = await openai.chat.completions.create({
+    const response = await anthropic.messages.create({
       model: 'claude-3-sonnet-20240229',
+      max_tokens: 1000,
+      system: '你是一个专业的家庭厨师助手，擅长根据用户需求推荐菜品、规划菜单、解答烹饪问题。请用简洁、实用的方式回复。',
       messages: [
-        {
-          role: 'system',
-          content: '你是一个专业的家庭厨师助手，擅长根据用户需求推荐菜品、规划菜单、解答烹饪问题。请用简洁、实用的方式回复。'
-        },
         {
           role: 'user',
           content: prompt
         }
-      ],
-      max_tokens: 1000,
+      ]
     });
 
-    return { success: true, data: response.choices[0].message.content };
+    return { success: true, data: response.content[0].text };
   } catch (error) {
     return { success: false, message: error.message };
   }
