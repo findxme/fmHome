@@ -30,7 +30,10 @@ const getAIResponse = async (prompt) => {
       ]
     });
 
-    return { success: true, data: response.content[0].text };
+    // 从 content 数组中找到 text 类型的回复
+    const textContent = response.content.find(c => c.type === 'text');
+    const replyText = textContent ? textContent.text : '';
+    return { success: true, data: replyText };
   } catch (error) {
     return { success: false, message: error.message };
   }

@@ -20,6 +20,8 @@ import cartRoutes from './routes/cart.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// 加载环境变量（优先 .env.local）
+dotenv.config({ path: path.resolve(__dirname, '.env.local') });
 dotenv.config();
 
 const app = express();

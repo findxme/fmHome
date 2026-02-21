@@ -310,19 +310,25 @@ const generateDish = async () => {
     })
 
     if (res.data.data) {
-      // 尝试解析JSON
+      // 尝试解析JSON（处理 markdown 代码块格式）
       try {
-        const jsonMatch = res.data.data.match(/\{[\s\S]*\}/)
+        // 去掉 ```json 和 ``` 标记
+        let jsonStr = res.data.data.replace(/```json\n?/g, '').replace(/```$/g, '').trim()
+        const jsonMatch = jsonStr.match(/\{[\s\S]*\}/)
         if (jsonMatch) {
           const dish = JSON.parse(jsonMatch[0])
+          // 处理中文字段名
           generatedDish.value = {
-            name: dish.name || 'AI创作菜品',
-            description: dish.description || '',
-            ingredients: dish.ingredients || [],
-            steps: dish.steps || []
+            name: dish.菜名 || dish.name || 'AI创作菜品',
+            description: dish.描述 || dish.description || '',
+            ingredients: dish.食材 ? Object.values(dish.食材).flat().map(i => typeof i === 'object' ? `${i.名称} ${i.用量}` : i)
+              : dish.ingredients || [],
+            steps: dish.烹饪步骤 ? dish.烹饪步骤.map(s => s.内容 || s.content || s)
+              : dish.steps || []
           }
         }
       } catch (e) {
+        console.error('解析失败:', e)
         // 解析失败，使用默认格式
         generatedDish.value = {
           name: 'AI创作菜品',
