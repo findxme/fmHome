@@ -78,4 +78,24 @@ router.delete('/', async (req, res) => {
   }
 });
 
+// 更新购物清单项目状态
+router.put('/', async (req, res) => {
+  try {
+    const { id, items } = req.body;
+    const db = getDatabase();
+
+    await db.prepare(`
+      UPDATE shopping_lists
+      SET items = ?
+      WHERE id = ?
+    `).run(JSON.stringify(items), id);
+
+    const updated = await db.prepare('SELECT * FROM shopping_lists WHERE id = ?').get(id);
+    updated.items = JSON.parse(updated.items || '[]');
+    res.json({ success: true, data: updated });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 export default router;

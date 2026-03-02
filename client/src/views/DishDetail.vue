@@ -489,26 +489,15 @@ const loadDish = async () => {
     dish.value = foundDish
     initIngredients()
   } else {
-    // 尝试从本地存储加载
-    const customDishes = JSON.parse(localStorage.getItem('fmhome_custom_dishes') || '[]')
-    const sampleDishes = JSON.parse(localStorage.getItem('fmhome_sample_dishes') || '[]')
-
-    const localDish = customDishes.find(d => d.id === dishId) || sampleDishes.find(d => d.id === dishId)
-
-    if (localDish) {
-      dish.value = localDish
-      initIngredients()
-    } else {
-      // 尝试从 API 加载
-      try {
-        const res = await dishApi.getById(dishId)
-        dish.value = res.data.data
-        if (dish.value) {
-          initIngredients()
-        }
-      } catch (e) {
-        console.error('加载菜品失败:', e)
+    // 从 API 加载
+    try {
+      const res = await dishApi.getById(dishId)
+      dish.value = res.data.data
+      if (dish.value) {
+        initIngredients()
       }
+    } catch (e) {
+      console.error('加载菜品失败:', e)
     }
   }
 

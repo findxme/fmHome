@@ -77,6 +77,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDishStore } from '@/stores/dishes'
+import { shoppingApi } from '@/api'
 
 const router = useRouter()
 const store = useDishStore()
@@ -91,9 +92,24 @@ const clearCart = () => {
   store.clearCart()
 }
 
-const generateList = () => {
-  // 保存购物车数据到本地存储，供购物清单页面使用
-  localStorage.setItem('fmhome_shopping_list', JSON.stringify(store.cart))
-  router.push('/shopping-list')
+const generateList = async () => {
+  // 保存购物清单到数据库
+  const listData = store.cart.map(item => ({
+    dish_id: item.dish_id,
+    dish_name: item.dish_name,
+    quantity: item.quantity,
+    checked: false
+  }))
+  
+  try {
+    // 清空旧的购物清单，保存新的
+    await shoppingApi.save({ items: listData })
+    router.push('/shopping-list')
+  } catch (e) {
+    console.error('保存购物清单失败:', e)
+    // 降级到 localStorage
+    localStorage.setItem('fmhome_shopping_list', JSON.stringify(store.cart))
+    router.push('/shopping-list')
+  }
 }
 </script>

@@ -26,6 +26,7 @@ export const ingredientApi = {
 export const shoppingApi = {
   get: (date) => api.get('/shopping-list', { params: { date } }),
   save: (data) => api.post('/shopping-list', data),
+  update: (id, items) => api.put('/shopping-list', { id, items }),
   delete: (id) => api.delete(`/shopping-list/${id}`)
 }
 
