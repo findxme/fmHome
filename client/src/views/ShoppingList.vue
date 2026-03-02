@@ -187,6 +187,7 @@ const tabs = [
 
 // 购物清单数据
 const shoppingListItems = ref([])
+const currentListId = ref(null)
 
 // 模板数据
 const templates = ref([
@@ -214,9 +215,12 @@ onMounted(() => {
 const loadShoppingList = async () => {
   try {
     const res = await shoppingApi.get()
-    if (res.data?.data?.items?.length > 0) {
-      shoppingListItems.value = res.data.data.items
-      return
+    if (res.data?.data) {
+      currentListId.value = res.data.data.id
+      if (res.data.data.items?.length > 0) {
+        shoppingListItems.value = res.data.data.items
+        return
+      }
     }
   } catch (e) {
     console.error('加载购物清单失败:', e)
@@ -314,12 +318,18 @@ const reuseHistory = (record) => {
 
 const handleUpdate = async (items) => {
   shoppingListItems.value = items
-  // 保存到数据库
+  // 保存到数据库，包含ID以更新现有清单
   try {
-    await shoppingApi.save({ items })
+    const res = await shoppingApi.save({ id: currentListId.value, items })
+    if (res.data?.data?.id) {
+      currentListId.value = res.data.data.id
+    }
   } catch (e) {
     console.error('保存购物清单失败:', e)
   }
+
+  // 保存到本地存储作为备份
+  localStorage.setItem('fmhome_shopping_list', JSON.stringify(items))
 
   // 保存到历史记录（当全部勾选时）
   if (items.length > 0 && items.every(i => i.checked)) {
@@ -339,9 +349,10 @@ const handleUpdate = async (items) => {
 const clearList = async () => {
   shoppingListItems.value = []
   try {
-    await shoppingApi.save({ items: [] })
+    await shoppingApi.save({ id: currentListId.value, items: [] })
   } catch (e) {
     console.error('清空购物清单失败:', e)
   }
+  localStorage.removeItem('fmhome_shopping_list')
 }
 </script>
