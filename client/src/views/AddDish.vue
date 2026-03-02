@@ -436,46 +436,35 @@ const saveDish = async () => {
   const filteredIngredients = dish.ingredients.filter(i => i.name && i.name.trim())
   const filteredSteps = dish.steps.filter(s => (s.title && s.title.trim()) || (s.description && s.description.trim()))
 
-  if (isEditMode.value) {
-    // 编辑模式：更新菜品
-    const updatedData = {
-      name: dish.name,
-      category: dish.category,
-      difficulty: dish.difficulty,
-      cooking_time: dish.cooking_time,
-      servings: dish.servings,
-      description: dish.description,
-      tags: dish.tags,
-      ingredients: filteredIngredients,
-      steps: filteredSteps,
-      images: dish.images && dish.images.length > 0 ? dish.images : [dish.image_url || imageOptions[0]],
-      video: dish.video || '',
-      image_url: dish.images?.[0] || dish.image_url || imageOptions[0]
-    }
+  if (!dish.name || !dish.category) {
+    showToast('❌', '请填写必填字段！')
+    return
+  }
 
-    // 保存到数据库
-    const dishData = {
-      name: dish.name,
-      category: dish.category,
-      difficulty: dish.difficulty,
-      cooking_time: dish.cooking_time,
-      servings: dish.servings,
-      description: dish.description,
-      tags: dish.tags,
-      ingredients: filteredIngredients,
-      steps: filteredSteps,
-      images: dish.images && dish.images.length > 0 ? dish.images : [dish.image_url || imageOptions[0]],
-      video: dish.video || '',
-      image_url: dish.images?.[0] || dish.image_url || imageOptions[0],
-      rating: '5.0',
-      is_custom: true
-    }
+  const dishData = {
+    name: dish.name,
+    category: dish.category,
+    difficulty: dish.difficulty,
+    cooking_time: dish.cooking_time,
+    servings: dish.servings,
+    description: dish.description,
+    tags: dish.tags,
+    ingredients: filteredIngredients,
+    steps: filteredSteps,
+    images: dish.images && dish.images.length > 0 ? dish.images : [dish.image_url || imageOptions[0]],
+    video: dish.video || '',
+    image_url: dish.images?.[0] || dish.image_url || imageOptions[0],
+    rating: '5.0',
+    is_custom: true
+  }
 
-    // 更新数据库
-    if (editDishId.value.startsWith('custom_') || editDishId.value.startsWith('sample_')) {
+  try {
+    if (isEditMode.value) {
+      // 编辑模式
       const dishId = editDishId.value.replace('custom_', '').replace('sample_', '')
       await dishApi.update(dishId, dishData)
     } else {
+      // 新增模式
       await dishApi.create(dishData)
     }
 
@@ -483,8 +472,12 @@ const saveDish = async () => {
     await dishStore.loadDishes()
     showToast('✅', '菜品保存成功！')
 
-  setTimeout(() => {
-    router.push('/')
-  }, 1000)
+    setTimeout(() => {
+      router.push('/')
+    }, 1000)
+  } catch (e) {
+    console.error('保存菜品失败:', e)
+    showToast('❌', '保存失败：' + e.message)
+  }
 }
 </script>
