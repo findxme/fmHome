@@ -140,3 +140,10 @@ export const historyApi = {
   get: () => api.get('/extra/purchase-history'),
   save: (items) => api.post('/extra/purchase-history', { items })
 }
+
+// 浏览历史API
+export const browseHistoryApi = {
+  get: (limit) => api.get('/extra/history', { params: { limit } }),
+  add: (dishId) => api.post('/extra/history', { dish_id: dishId }),
+  clear: () => api.delete('/extra/history')
+}

@@ -147,4 +147,59 @@ router.post('/purchase-history', async (req, res) => {
   }
 });
 
+// 获取浏览历史
+router.get('/history', async (req, res) => {
+  try {
+    const { limit } = req.query;
+    let sql = `
+      SELECT h.*, d.name, d.image_url, d.category, d.difficulty, d.cooking_time
+      FROM dish_history h
+      LEFT JOIN dishes d ON h.dish_id = d.id
+      ORDER BY h.viewed_at DESC
+    `;
+    if (limit) {
+      sql += ` LIMIT ${parseInt(limit)}`;
+    }
+    const history = await getDatabase().prepare(sql).all();
+    res.json({ success: true, data: history });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 添加浏览历史
+router.post('/history', async (req, res) => {
+  try {
+    const { dish_id } = req.body;
+    const db = getDatabase();
+    
+    // 先删除同菜品的旧记录（避免重复）
+    await db.prepare('DELETE FROM dish_history WHERE dish_id = ?').run(dish_id);
+    
+    // 添加新记录
+    await db.prepare('INSERT INTO dish_history (dish_id) VALUES (?)').run(dish_id);
+    
+    // 保留最近50条记录
+    await db.prepare(`
+      DELETE FROM dish_history WHERE id NOT IN (
+        SELECT id FROM (SELECT id FROM dish_history ORDER BY viewed_at DESC LIMIT 50) AS recent
+      )
+    `).run();
+    
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 清空浏览历史
+router.delete('/history', async (req, res) => {
+  try {
+    await getDatabase().prepare('DELETE FROM dish_history').run();
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 export default router;

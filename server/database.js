@@ -216,6 +216,16 @@ export async function initDatabase() {
     )
   `);
 
+  // 浏览历史表
+  await pool.execute(`
+    CREATE TABLE IF NOT EXISTS dish_history (
+      id INT PRIMARY KEY AUTO_INCREMENT,
+      dish_id VARCHAR(255) NOT NULL,
+      viewed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_viewed_at (viewed_at)
+    )
+  `);
+
   // 创建索引
   try { await pool.execute('CREATE INDEX idx_dishes_category ON dishes(category)'); } catch (e) { if (e.code !== 'ER_DUP_KEYNAME') throw e; }
   try { await pool.execute('CREATE INDEX idx_dishes_difficulty ON dishes(difficulty)'); } catch (e) { if (e.code !== 'ER_DUP_KEYNAME') throw e; }

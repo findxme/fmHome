@@ -127,6 +127,8 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { favoritesApi } from '@/api'
+import { browseHistoryApi } from '@/api'
 
 // 收藏的菜品
 const favorites = ref([])
@@ -137,17 +139,35 @@ const history = ref([])
 // 主题
 const isDark = ref(false)
 
-onMounted(() => {
-  // 加载收藏
-  const savedFavorites = localStorage.getItem('fmhome_favorites')
-  if (savedFavorites) {
-    favorites.value = JSON.parse(savedFavorites)
+onMounted(async () => {
+  // 加载收藏 - 从API获取
+  try {
+    const favRes = await favoritesApi.getAll()
+    if (favRes.data.success) {
+      favorites.value = favRes.data.data || []
+    }
+  } catch (e) {
+    console.error('加载收藏失败:', e)
+    // 降级到 localStorage
+    const savedFavorites = localStorage.getItem('fmhome_favorites')
+    if (savedFavorites) {
+      favorites.value = JSON.parse(savedFavorites)
+    }
   }
 
-  // 加载历史
-  const savedHistory = localStorage.getItem('fmhome_history')
-  if (savedHistory) {
-    history.value = JSON.parse(savedHistory).slice(0, 10)
+  // 加载历史 - 从API获取
+  try {
+    const historyRes = await browseHistoryApi.get(10)
+    if (historyRes.data.success) {
+      history.value = historyRes.data.data || []
+    }
+  } catch (e) {
+    console.error('加载历史失败:', e)
+    // 降级到 localStorage
+    const savedHistory = localStorage.getItem('fmhome_history')
+    if (savedHistory) {
+      history.value = JSON.parse(savedHistory).slice(0, 10)
+    }
   }
 
   // 加载主题
@@ -168,10 +188,16 @@ const toggleTheme = () => {
 }
 
 // 清空历史
-const clearHistory = () => {
+const clearHistory = async () => {
   if (confirm('确定清空浏览历史吗？')) {
-    history.value = []
-    localStorage.removeItem('fmhome_history')
+    try {
+      await browseHistoryApi.clear()
+      history.value = []
+    } catch (e) {
+      console.error('清空历史失败:', e)
+      history.value = []
+      localStorage.removeItem('fmhome_history')
+    }
   }
 }
 </script>
