@@ -4,32 +4,32 @@ import { getDatabase } from '../database.js';
 const router = express.Router();
 
 // 获取所有菜品
-router.get('/', (req, res) => {
+router.get(async (req, res) => {
   try {
     const { category, search, tag } = req.query;
     let dishes;
 
     if (search) {
-      dishes = getDatabase().prepare(`
+      dishes = await getDatabase().prepare(`
         SELECT id, name, category, tags, difficulty, cooking_time, description, image_url
         FROM dishes
         WHERE name LIKE ? OR tags LIKE ?
         ORDER BY created_at DESC
       `).all(`%${search}%`, `%${search}%`);
     } else if (category) {
-      dishes = getDatabase().prepare(`
+      dishes = await getDatabase().prepare(`
         SELECT id, name, category, tags, difficulty, cooking_time, description, image_url
         FROM dishes WHERE category = ?
         ORDER BY created_at DESC
       `).all(category);
     } else if (tag) {
-      dishes = getDatabase().prepare(`
+      dishes = await getDatabase().prepare(`
         SELECT id, name, category, tags, difficulty, cooking_time, description, image_url
         FROM dishes WHERE tags LIKE ?
         ORDER BY created_at DESC
       `).all(`%${tag}%`);
     } else {
-      dishes = getDatabase().prepare(`
+      dishes = await getDatabase().prepare(`
         SELECT id, name, category, tags, difficulty, cooking_time, description, image_url
         FROM dishes ORDER BY created_at DESC
       `).all();
@@ -42,9 +42,9 @@ router.get('/', (req, res) => {
 });
 
 // 获取单个菜品详情（完整信息）
-router.get('/:id', (req, res) => {
+router.get(async (req, res) => {
   try {
-    const dish = getDatabase().prepare(`
+    const dish = await getDatabase().prepare(`
       SELECT * FROM dishes WHERE id = ?
     `).get(req.params.id);
 
@@ -64,9 +64,9 @@ router.get('/:id', (req, res) => {
 });
 
 // 获取所有分类
-router.get('/categories/list', (req, res) => {
+router.get(async (req, res) => {
   try {
-    const categories = getDatabase().prepare(`
+    const categories = await getDatabase().prepare(`
       SELECT DISTINCT category, COUNT(*) as count
       FROM dishes
       GROUP BY category
@@ -80,9 +80,9 @@ router.get('/categories/list', (req, res) => {
 });
 
 // 获取推荐菜品
-router.get('/recommend/daily', (req, res) => {
+router.get(async (req, res) => {
   try {
-    const dishes = getDatabase().prepare(`
+    const dishes = await getDatabase().prepare(`
       SELECT id, name, category, tags, difficulty, cooking_time, description, image_url
       FROM dishes
       ORDER BY RANDOM()
@@ -96,7 +96,7 @@ router.get('/recommend/daily', (req, res) => {
 });
 
 // 根据食材搜索菜品
-router.get('/by-ingredients', (req, res) => {
+router.get(async (req, res) => {
   try {
     const { ingredients } = req.query;
     if (!ingredients) {
@@ -104,7 +104,7 @@ router.get('/by-ingredients', (req, res) => {
     }
 
     const ingredientList = ingredients.split(',');
-    let dishes = getDatabase().prepare(`
+    let dishes = await getDatabase().prepare(`
       SELECT * FROM dishes ORDER BY created_at DESC
     `).all();
 

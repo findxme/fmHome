@@ -3,22 +3,11 @@ import { seedData } from './seedData.js';
 
 let pool;
 
-// 创建类似 better-sqlite3 的 API 适配器
-function createStatementAdapter(pool) {
-  return function prepare(sql) {
-    return {
-      all: (...params) => pool.execute(sql, params).then(([rows]) => rows),
-      get: (...params) => pool.execute(sql, params).then(([rows]) => rows[0]),
-      run: (...params) => pool.execute(sql, params).then(([result]) => result)
-    };
-  };
-}
-
 export function getPool() {
   if (!pool) {
     pool = mysql.createPool({
       host: process.env.DB_HOST || '8.140.209.138',
-      port: process.env.DB_PORT || 9000,
+      port: parseInt(process.env.DB_PORT) || 9000,
       user: process.env.DB_USER || 'root',
       password: process.env.DB_PASSWORD || 'fm123',
       database: process.env.DB_NAME || 'fm_home',
@@ -30,10 +19,15 @@ export function getPool() {
   return pool;
 }
 
+// 兼容旧 API - 返回同步风格的对象，但方法返回 Promise
 export function getDatabase() {
-  // 返回类似 better-sqlite3 的 API
+  const p = getPool();
   return {
-    prepare: createStatementAdapter(getPool())
+    prepare: (sql) => ({
+      all: (...params) => p.execute(sql, params).then(([rows]) => rows),
+      get: (...params) => p.execute(sql, params).then(([rows]) => rows[0]),
+      run: (...params) => p.execute(sql, params).then(([result]) => result)
+    })
   };
 }
 
@@ -222,28 +216,17 @@ export async function initDatabase() {
     )
   `);
 
-  // 创建索引 (MySQL 需要先检查是否存在)
-  try {
-    await pool.execute('CREATE INDEX idx_dishes_category ON dishes(category)');
-  } catch (e) { if (e.code !== 'ER_DUP_KEYNAME') throw e; }
-  try {
-    await pool.execute('CREATE INDEX idx_dishes_difficulty ON dishes(difficulty)');
-  } catch (e) { if (e.code !== 'ER_DUP_KEYNAME') throw e; }
-  try {
-    await pool.execute('CREATE INDEX idx_ingredients_category ON ingredients(category)');
-  } catch (e) { if (e.code !== 'ER_DUP_KEYNAME') throw e; }
-  try {
-    await pool.execute('CREATE INDEX idx_cooking_records_date ON cooking_records(cooked_at)');
-  } catch (e) { if (e.code !== 'ER_DUP_KEYNAME') throw e; }
-  try {
-    await pool.execute('CREATE INDEX idx_shopping_lists_date ON shopping_lists(date)');
-  } catch (e) { if (e.code !== 'ER_DUP_KEYNAME') throw e; }
+  // 创建索引
+  try { await pool.execute('CREATE INDEX idx_dishes_category ON dishes(category)'); } catch (e) { if (e.code !== 'ER_DUP_KEYNAME') throw e; }
+  try { await pool.execute('CREATE INDEX idx_dishes_difficulty ON dishes(difficulty)'); } catch (e) { if (e.code !== 'ER_DUP_KEYNAME') throw e; }
+  try { await pool.execute('CREATE INDEX idx_ingredients_category ON ingredients(category)'); } catch (e) { if (e.code !== 'ER_DUP_KEYNAME') throw e; }
+  try { await pool.execute('CREATE INDEX idx_cooking_records_date ON cooking_records(cooked_at)'); } catch (e) { if (e.code !== 'ER_DUP_KEYNAME') throw e; }
+  try { await pool.execute('CREATE INDEX idx_shopping_lists_date ON shopping_lists(date)'); } catch (e) { if (e.code !== 'ER_DUP_KEYNAME') throw e; }
 
   // 检查是否需要种子数据
   const [rows] = await pool.execute('SELECT COUNT(*) as count FROM dishes');
   if (rows[0].count === 0) {
     console.log('🌱 正在初始化种子数据...');
-    // 传递一个适配器对象给 seedData
     const dbAdapter = {
       prepare: (sql) => ({
         run: (...params) => pool.execute(sql, params),
@@ -251,13 +234,12 @@ export async function initDatabase() {
         all: (...params) => pool.execute(sql, params).then(([r]) => r)
       })
     };
-    seedData(dbAdapter);
+    await seedData(dbAdapter);
   }
 
   console.log('✅ 数据库初始化完成');
 }
 
-// 关闭数据库连接
 export async function closeDatabase() {
   if (pool) {
     await pool.end();

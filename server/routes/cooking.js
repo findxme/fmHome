@@ -4,11 +4,11 @@ import { getDatabase } from '../database.js';
 const router = express.Router();
 
 // 获取烹饪记录
-router.get('/history', (req, res) => {
+router.get(async (req, res) => {
   const db = getDatabase();
   const { limit = 20 } = req.query;
   try {
-    const records = db.prepare(`
+    const records = await db.prepare(`
       SELECT * FROM cooking_records
       ORDER BY cooked_at DESC
       LIMIT ?
@@ -20,11 +20,11 @@ router.get('/history', (req, res) => {
 });
 
 // 记录烹饪
-router.post('/record', (req, res) => {
+router.post(async (req, res) => {
   const db = getDatabase();
   const { dish_id, dish_name, rating, notes } = req.body;
   try {
-    const stmt = db.prepare(`
+    const stmt = await db.prepare(`
       INSERT INTO cooking_records (dish_id, dish_name, rating, notes)
       VALUES (?, ?, ?, ?)
     `);
@@ -40,12 +40,12 @@ router.post('/record', (req, res) => {
 });
 
 // 获取烹饪统计
-router.get('/stats', (req, res) => {
+router.get(async (req, res) => {
   const db = getDatabase();
   try {
-    const totalCooks = db.prepare('SELECT COUNT(*) as count FROM cooking_records').get();
-    const avgRating = db.prepare('SELECT AVG(rating) as avg FROM cooking_records WHERE rating IS NOT NULL').get();
-    const recentCooks = db.prepare(`
+    const totalCooks = await db.prepare('SELECT COUNT(*) as count FROM cooking_records').get();
+    const avgRating = await db.prepare('SELECT AVG(rating) as avg FROM cooking_records WHERE rating IS NOT NULL').get();
+    const recentCooks = await db.prepare(`
       SELECT date(cooked_at) as date, COUNT(*) as count
       FROM cooking_records
       WHERE cooked_at >= date('now', '-7 days')
@@ -53,7 +53,7 @@ router.get('/stats', (req, res) => {
     `).all();
 
     // 获取用户等级
-    const userLevel = db.prepare('SELECT * FROM user_levels WHERE id = 1').get();
+    const userLevel = await db.prepare('SELECT * FROM user_levels WHERE id = 1').get();
 
     res.json({
       success: true,
@@ -74,7 +74,7 @@ function updateUserLevel(db) {
   const today = new Date().toISOString().split('T')[0];
 
   // 获取或创建用户等级记录
-  let userLevel = db.prepare('SELECT * FROM user_levels WHERE id = 1').get();
+  let userLevel = await db.prepare('SELECT * FROM user_levels WHERE id = 1').get();
 
   if (!userLevel) {
     db.prepare('INSERT INTO user_levels (id, level, experience_points, total_cooks, consecutive_days, last_cook_date) VALUES (1, 1, 0, 0, 0, ?)').run(today);

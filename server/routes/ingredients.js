@@ -4,24 +4,24 @@ import { getDatabase } from '../database.js';
 const router = express.Router();
 
 // 获取所有食材
-router.get('/', (req, res) => {
+router.get(async (req, res) => {
   try {
     const { category, search } = req.query;
     let ingredients;
 
     if (search) {
-      ingredients = getDatabase().prepare(`
+      ingredients = await getDatabase().prepare(`
         SELECT * FROM ingredients
         WHERE name LIKE ?
         ORDER BY name ASC
       `).all(`%${search}%`);
     } else if (category) {
-      ingredients = getDatabase().prepare(`
+      ingredients = await getDatabase().prepare(`
         SELECT * FROM ingredients WHERE category = ?
         ORDER BY name ASC
       `).all(category);
     } else {
-      ingredients = getDatabase().prepare(`
+      ingredients = await getDatabase().prepare(`
         SELECT * FROM ingredients ORDER BY name ASC
       `).all();
     }
@@ -33,9 +33,9 @@ router.get('/', (req, res) => {
 });
 
 // 获取食材分类
-router.get('/categories', (req, res) => {
+router.get(async (req, res) => {
   try {
-    const categories = getDatabase().prepare(`
+    const categories = await getDatabase().prepare(`
       SELECT DISTINCT category, COUNT(*) as count
       FROM ingredients
       GROUP BY category

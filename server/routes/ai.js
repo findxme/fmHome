@@ -40,13 +40,13 @@ const getAIResponse = async (prompt) => {
 };
 
 // 智能推荐菜品
-router.post('/recommend', async (req, res) => {
+router.post(async (req, res) => {
   try {
     const { taste, difficulty, type, ingredients, count = 5 } = req.body;
 
     // 获取数据库中的菜品
     const db = getDatabase();
-    let dishes = db.prepare('SELECT * FROM dishes').all();
+    let dishes = await db.prepare('SELECT * FROM dishes').all();
 
     // 基础筛选
     if (taste && taste !== '不限') {
@@ -78,7 +78,7 @@ router.post('/recommend', async (req, res) => {
 });
 
 // AI 菜单规划
-router.post('/plan', async (req, res) => {
+router.post(async (req, res) => {
   try {
     const { days = 7, preferences } = req.body;
 
@@ -123,7 +123,7 @@ router.post('/plan', async (req, res) => {
 });
 
 // 烹饪问答
-router.post('/chat', async (req, res) => {
+router.post(async (req, res) => {
   try {
     const { question, context } = req.body;
 
@@ -143,7 +143,7 @@ router.post('/chat', async (req, res) => {
 });
 
 // 心情推荐
-router.post('/recommend-by-mood', async (req, res) => {
+router.post(async (req, res) => {
   try {
     const { mood, excludeIngredients } = req.body;
 
@@ -158,7 +158,7 @@ router.post('/recommend-by-mood', async (req, res) => {
     const recommendedTags = moodMapping[mood] || [];
 
     const db = getDatabase();
-    let dishes = db.prepare('SELECT * FROM dishes').all();
+    let dishes = await db.prepare('SELECT * FROM dishes').all();
 
     // 根据心情筛选
     if (recommendedTags.length > 0) {
@@ -186,7 +186,7 @@ router.post('/recommend-by-mood', async (req, res) => {
 });
 
 // 季节推荐
-router.get('/seasonal', (req, res) => {
+router.get(async (req, res) => {
   try {
     const month = new Date().getMonth() + 1;
 
@@ -206,7 +206,7 @@ router.get('/seasonal', (req, res) => {
     const config = seasonalMapping[season];
 
     const db = getDatabase();
-    let dishes = db.prepare('SELECT * FROM dishes').all();
+    let dishes = await db.prepare('SELECT * FROM dishes').all();
 
     dishes = dishes.filter(d => {
       const tags = d.tags || '';
@@ -231,12 +231,12 @@ router.get('/seasonal', (req, res) => {
 });
 
 // 随机roll点推荐
-router.post('/roll-dice', (req, res) => {
+router.post(async (req, res) => {
   try {
     const { excludeDishes } = req.body;
 
     const db = getDatabase();
-    let dishes = db.prepare('SELECT * FROM dishes').all();
+    let dishes = await db.prepare('SELECT * FROM dishes').all();
 
     // 排除已选择的
     if (excludeDishes && excludeDishes.length > 0) {
@@ -267,7 +267,7 @@ router.post('/roll-dice', (req, res) => {
 });
 
 // 食材生成菜谱
-router.post('/ingredient-recipe', async (req, res) => {
+router.post(async (req, res) => {
   try {
     const { ingredients, excludeIngredients } = req.body;
 
@@ -312,7 +312,7 @@ router.post('/ingredient-recipe', async (req, res) => {
 });
 
 // 获取心情选项
-router.get('/mood-options', (req, res) => {
+router.get(async (req, res) => {
   res.json({
     success: true,
     data: [
@@ -340,7 +340,7 @@ function getMoodReason(mood) {
 // 生成默认菜单计划
 function generateDefaultPlan(days) {
   const db = getDatabase();
-  const dishes = db.prepare('SELECT * FROM dishes').all();
+  const dishes = await db.prepare('SELECT * FROM dishes').all();
   const categories = ['午餐', '晚餐'];
 
   const plan = {

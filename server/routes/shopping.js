@@ -5,19 +5,19 @@ import { v4 as uuidv4 } from 'uuid';
 const router = express.Router();
 
 // 获取购物清单
-router.get('/', (req, res) => {
+router.get(async (req, res) => {
   try {
     const { date } = req.query;
     let list;
 
     if (date) {
-      list = getDatabase().prepare(`
+      list = await getDatabase().prepare(`
         SELECT * FROM shopping_lists WHERE date = ?
         ORDER BY created_at DESC
         LIMIT 1
       `).get(date);
     } else {
-      list = getDatabase().prepare(`
+      list = await getDatabase().prepare(`
         SELECT * FROM shopping_lists
         ORDER BY created_at DESC
         LIMIT 1
@@ -35,7 +35,7 @@ router.get('/', (req, res) => {
 });
 
 // 创建/更新购物清单
-router.post('/', (req, res) => {
+router.post(async (req, res) => {
   try {
     const { id, date, items } = req.body;
     const db = getDatabase();
@@ -48,7 +48,7 @@ router.post('/', (req, res) => {
         WHERE id = ?
       `).run(JSON.stringify(items), id);
 
-      const updated = db.prepare('SELECT * FROM shopping_lists WHERE id = ?').get(id);
+      const updated = await db.prepare('SELECT * FROM shopping_lists WHERE id = ?').get(id);
       updated.items = JSON.parse(updated.items || '[]');
       res.json({ success: true, data: updated });
     } else {
@@ -59,7 +59,7 @@ router.post('/', (req, res) => {
         VALUES (?, ?, ?, 'pending')
       `).run(newId, date || new Date().toISOString().split('T')[0], JSON.stringify(items || []));
 
-      const newList = db.prepare('SELECT * FROM shopping_lists WHERE id = ?').get(newId);
+      const newList = await db.prepare('SELECT * FROM shopping_lists WHERE id = ?').get(newId);
       newList.items = JSON.parse(newList.items || '[]');
       res.json({ success: true, data: newList });
     }
@@ -69,7 +69,7 @@ router.post('/', (req, res) => {
 });
 
 // 删除购物清单
-router.delete('/:id', (req, res) => {
+router.delete(async (req, res) => {
   try {
     getDatabase().prepare('DELETE FROM shopping_lists WHERE id = ?').run(req.params.id);
     res.json({ success: true, message: '删除成功' });

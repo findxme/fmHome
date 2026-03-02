@@ -20,16 +20,16 @@ const achievements = [
 ];
 
 // 获取所有成就定义
-router.get('/', (req, res) => {
+router.get(async (req, res) => {
   res.json({ success: true, data: achievements });
 });
 
 // 获取用户成就进度
-router.get('/my', (req, res) => {
+router.get(async (req, res) => {
   const db = getDatabase();
   try {
-    const userAchievements = db.prepare('SELECT * FROM user_achievements').all();
-    const userLevel = db.prepare('SELECT * FROM user_levels WHERE id = 1').get();
+    const userAchievements = await db.prepare('SELECT * FROM user_achievements').all();
+    const userLevel = await db.prepare('SELECT * FROM user_levels WHERE id = 1').get();
 
     // 合并成就数据
     const result = achievements.map(achievement => {
@@ -55,12 +55,12 @@ router.get('/my', (req, res) => {
 });
 
 // 检查并更新成就状态
-router.post('/check', (req, res) => {
+router.post(async (req, res) => {
   const db = getDatabase();
   try {
-    const stats = db.prepare('SELECT COUNT(*) as totalCooks FROM cooking_records').get();
-    const userLevel = db.prepare('SELECT * FROM user_levels WHERE id = 1').get();
-    const favorites = db.prepare('SELECT COUNT(*) as count FROM dish_favorites').get();
+    const stats = await db.prepare('SELECT COUNT(*) as totalCooks FROM cooking_records').get();
+    const userLevel = await db.prepare('SELECT * FROM user_levels WHERE id = 1').get();
+    const favorites = await db.prepare('SELECT COUNT(*) as count FROM dish_favorites').get();
 
     const userStats = {
       totalCooks: stats.totalCooks,
@@ -85,7 +85,7 @@ router.post('/check', (req, res) => {
         }
       }
 
-      const existing = db.prepare('SELECT * FROM user_achievements WHERE achievement_id = ?').get(achievement.id);
+      const existing = await db.prepare('SELECT * FROM user_achievements WHERE achievement_id = ?').get(achievement.id);
 
       if (progress >= achievement.requirement) {
         if (!existing) {

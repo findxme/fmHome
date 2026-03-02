@@ -4,10 +4,10 @@ import { getDatabase } from '../database.js';
 const router = express.Router();
 
 // 获取食材库存
-router.get('/', (req, res) => {
+router.get(async (req, res) => {
   const db = getDatabase();
   try {
-    const stock = db.prepare('SELECT * FROM ingredient_stock ORDER BY created_at DESC').all();
+    const stock = await db.prepare('SELECT * FROM ingredient_stock ORDER BY created_at DESC').all();
     res.json({ success: true, data: stock });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -15,11 +15,11 @@ router.get('/', (req, res) => {
 });
 
 // 添加食材到库存
-router.post('/', (req, res) => {
+router.post(async (req, res) => {
   const db = getDatabase();
   const { ingredient_name, quantity, unit, category, expiry_date } = req.body;
   try {
-    const stmt = db.prepare(`
+    const stmt = await db.prepare(`
       INSERT INTO ingredient_stock (ingredient_name, quantity, unit, category, expiry_date)
       VALUES (?, ?, ?, ?, ?)
     `);
@@ -31,12 +31,12 @@ router.post('/', (req, res) => {
 });
 
 // 更新库存
-router.put('/:id', (req, res) => {
+router.put(async (req, res) => {
   const db = getDatabase();
   const { id } = req.params;
   const { quantity, unit, category, expiry_date, status } = req.body;
   try {
-    const stmt = db.prepare(`
+    const stmt = await db.prepare(`
       UPDATE ingredient_stock
       SET quantity = ?, unit = ?, category = ?, expiry_date = ?, status = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
@@ -49,7 +49,7 @@ router.put('/:id', (req, res) => {
 });
 
 // 删除库存
-router.delete('/:id', (req, res) => {
+router.delete(async (req, res) => {
   const db = getDatabase();
   const { id } = req.params;
   try {
@@ -61,10 +61,10 @@ router.delete('/:id', (req, res) => {
 });
 
 // 获取即将过期食材
-router.get('/expiring', (req, res) => {
+router.get(async (req, res) => {
   const db = getDatabase();
   try {
-    const stock = db.prepare(`
+    const stock = await db.prepare(`
       SELECT * FROM ingredient_stock
       WHERE expiry_date IS NOT NULL
       AND expiry_date <= date('now', '+3 days')

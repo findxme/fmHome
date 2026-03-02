@@ -4,10 +4,10 @@ import { getDatabase } from '../database.js';
 const router = express.Router();
 
 // 获取收藏列表
-router.get('/', (req, res) => {
+router.get(async (req, res) => {
   const db = getDatabase();
   try {
-    const favorites = db.prepare(`
+    const favorites = await db.prepare(`
       SELECT f.*, d.name, d.image_url, d.category, d.difficulty, d.cooking_time
       FROM dish_favorites f
       LEFT JOIN dishes d ON f.dish_id = d.id
@@ -20,11 +20,11 @@ router.get('/', (req, res) => {
 });
 
 // 添加收藏
-router.post('/', (req, res) => {
+router.post(async (req, res) => {
   const db = getDatabase();
   const { dish_id } = req.body;
   try {
-    const stmt = db.prepare('INSERT OR IGNORE INTO dish_favorites (dish_id) VALUES (?)');
+    const stmt = await db.prepare('INSERT OR IGNORE INTO dish_favorites (dish_id) VALUES (?)');
     stmt.run(dish_id);
     res.json({ success: true });
   } catch (error) {
@@ -33,7 +33,7 @@ router.post('/', (req, res) => {
 });
 
 // 取消收藏
-router.delete('/:dishId', (req, res) => {
+router.delete(async (req, res) => {
   const db = getDatabase();
   const { dishId } = req.params;
   try {
@@ -45,11 +45,11 @@ router.delete('/:dishId', (req, res) => {
 });
 
 // 检查是否收藏
-router.get('/check/:dishId', (req, res) => {
+router.get(async (req, res) => {
   const db = getDatabase();
   const { dishId } = req.params;
   try {
-    const result = db.prepare('SELECT id FROM dish_favorites WHERE dish_id = ?').get(dishId);
+    const result = await db.prepare('SELECT id FROM dish_favorites WHERE dish_id = ?').get(dishId);
     res.json({ success: true, isFavorite: !!result });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
