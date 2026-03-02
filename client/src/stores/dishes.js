@@ -9,11 +9,10 @@ export const useDishStore = defineStore('dishes', () => {
   const loading = ref(false)
   const currentDish = ref(null)
   const cart = ref([])
-  const preferences = ref({
-    taste: '不限',
-    difficulty: '不限'
-  })
-
+  
+  // 初始化时加载购物车
+  loadCart()
+  
   // 加载菜品列表 - 从 MySQL 获取
   const loadDishes = async () => {
     loading.value = true
