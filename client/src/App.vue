@@ -24,26 +24,18 @@ import ThemeSelector from '@/components/ThemeSelector.vue'
 const isDark = ref(false)
 
 onMounted(() => {
-  const savedTheme = 
-  if (savedTheme) {
-    isDark.value = savedTheme === 'dark'
-  } else {
-    // 跟随系统设置
-    isDark.value = window.matchMedia('(prefers-color-scheme: dark)').matches
-  }
+  // 跟随系统设置
+  isDark.value = window.matchMedia('(prefers-color-scheme: dark)').matches
 })
 
 // 监听系统主题变化
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-  if (!
-    isDark.value = e.matches
-  }
+  isDark.value = e.matches
 })
 
 // 切换深色模式
 const toggleDark = () => {
   isDark.value = !isDark.value
-  
 }
 
 // 暴露给子组件
