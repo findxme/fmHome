@@ -20,12 +20,16 @@
 import { ref, onMounted } from 'vue'
 import BottomNav from '@/components/BottomNav.vue'
 import ThemeSelector from '@/components/ThemeSelector.vue'
+import { useDishStore } from '@/stores/dishes'
 
 const isDark = ref(false)
+const store = useDishStore()
 
 onMounted(() => {
   // 跟随系统设置
   isDark.value = window.matchMedia('(prefers-color-scheme: dark)').matches
+  // 加载购物车
+  store.loadCart()
 })
 
 // 监听系统主题变化
