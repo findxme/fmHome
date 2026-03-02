@@ -63,14 +63,11 @@ const applyTheme = (themeId) => {
     document.documentElement.style.setProperty('--color-accent-500', theme.primary)
     document.documentElement.style.setProperty('--color-accent-600', theme.primary)
 
-    // 保存到localStorage
-    localStorage.setItem('fmhome_theme', themeId)
   }
 }
 
 // 加载保存的主题
 onMounted(() => {
-  const savedTheme = localStorage.getItem('fmhome_theme')
   if (savedTheme && themes.find(t => t.id === savedTheme)) {
     applyTheme(savedTheme)
   }

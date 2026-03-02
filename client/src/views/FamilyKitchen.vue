@@ -412,7 +412,6 @@ const familyMembers = ref([])
 
 // 从本地存储恢复
 onMounted(() => {
-  const saved = localStorage.getItem('fmhome_family_members')
   if (saved) {
     familyMembers.value = JSON.parse(saved)
   }
@@ -420,7 +419,6 @@ onMounted(() => {
 
 // 保存到本地存储
 const saveMembers = () => {
-  localStorage.setItem('fmhome_family_members', JSON.stringify(familyMembers.value))
 }
 
 // 获取成员名字
@@ -561,13 +559,11 @@ const removeTodo = async (id) => {
 // 连续打卡
 const checkinStreak = ref(0)
 onMounted(() => {
-  const savedStreak = localStorage.getItem('fmhome_checkin_streak')
   if (savedStreak) {
     checkinStreak.value = parseInt(savedStreak)
   }
 
   // 检查上次打卡日期
-  const lastCheckin = localStorage.getItem('fmhome_last_checkin')
   if (lastCheckin) {
     const lastDate = new Date(lastCheckin)
     const today = new Date()
@@ -578,7 +574,6 @@ onMounted(() => {
   }
 
   // 恢复待办
-  const savedTodos = localStorage.getItem('fmhome_todos')
   if (savedTodos) {
     const allTodos = JSON.parse(savedTodos)
     // 只保留今天的待办
@@ -589,11 +584,9 @@ onMounted(() => {
 
 const doCheckin = async () => {
   const today = new Date().toDateString()
-  const lastCheckin = localStorage.getItem('fmhome_last_checkin')
 
   if (lastCheckin !== today) {
     checkinStreak.value++
-    localStorage.setItem('fmhome_last_checkin', today)
     try { await checkinApi.checkin(); } catch(e) { }
     showToast('🎊', `连续打卡 ${checkinStreak.value} 天！`)
 

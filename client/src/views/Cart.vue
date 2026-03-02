@@ -107,8 +107,6 @@ const generateList = async () => {
     router.push('/shopping-list')
   } catch (e) {
     console.error('保存购物清单失败:', e)
-    // 降级到 localStorage
-    localStorage.setItem('fmhome_shopping_list', JSON.stringify(store.cart))
     router.push('/shopping-list')
   }
 }

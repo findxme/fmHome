@@ -148,8 +148,6 @@ onMounted(async () => {
     }
   } catch (e) {
     console.error('加载收藏失败:', e)
-    // 降级到 localStorage
-    const savedFavorites = localStorage.getItem('fmhome_favorites')
     if (savedFavorites) {
       favorites.value = JSON.parse(savedFavorites)
     }
@@ -163,22 +161,18 @@ onMounted(async () => {
     }
   } catch (e) {
     console.error('加载历史失败:', e)
-    // 降级到 localStorage
-    const savedHistory = localStorage.getItem('fmhome_history')
     if (savedHistory) {
       history.value = JSON.parse(savedHistory).slice(0, 10)
     }
   }
 
   // 加载主题
-  const savedTheme = localStorage.getItem('fmhome_theme')
   isDark.value = savedTheme === 'dark'
 })
 
 // 切换主题
 const toggleTheme = () => {
   isDark.value = !isDark.value
-  localStorage.setItem('fmhome_theme', isDark.value ? 'dark' : 'light')
 
   if (isDark.value) {
     document.documentElement.classList.add('dark')
@@ -196,7 +190,6 @@ const clearHistory = async () => {
     } catch (e) {
       console.error('清空历史失败:', e)
       history.value = []
-      localStorage.removeItem('fmhome_history')
     }
   }
 }

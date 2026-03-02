@@ -226,7 +226,6 @@ const loadShoppingList = async () => {
     console.error('加载购物清单失败:', e)
   }
   // 降级到本地存储
-  const savedList = localStorage.getItem('fmhome_shopping_list')
   if (savedList) {
     const parsed = JSON.parse(savedList)
     if (parsed.length > 0) {
@@ -296,10 +295,8 @@ const saveAsTemplate = () => {
     items: shoppingListItems.value.map(i => i.name)
   }
 
-  const saved = localStorage.getItem('fmhome_templates')
   const existing = saved ? JSON.parse(saved) : []
   existing.push(newTemplate)
-  localStorage.setItem('fmhome_templates', JSON.stringify(existing))
 
   templates.value.push(newTemplate)
   newTemplateName.value = ''
@@ -329,7 +326,6 @@ const handleUpdate = async (items) => {
   }
 
   // 保存到本地存储作为备份
-  localStorage.setItem('fmhome_shopping_list', JSON.stringify(items))
 
   // 保存到历史记录（当全部勾选时）
   if (items.length > 0 && items.every(i => i.checked)) {
@@ -353,6 +349,5 @@ const clearList = async () => {
   } catch (e) {
     console.error('清空购物清单失败:', e)
   }
-  localStorage.removeItem('fmhome_shopping_list')
 }
 </script>

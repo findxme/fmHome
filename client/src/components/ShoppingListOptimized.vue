@@ -358,7 +358,6 @@ const totalCount = computed(() => internalItems.value.length)
 const checkedCount = computed(() => internalItems.value.filter(i => i.checked).length)
 
 const updateItem = (item) => {
-  // 移除 localStorage 保存勾选状态，改为通过 emit 通知父组件保存
   emit('update', internalItems.value)
 }
 

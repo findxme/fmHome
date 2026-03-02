@@ -23,9 +23,8 @@ import ThemeSelector from '@/components/ThemeSelector.vue'
 
 const isDark = ref(false)
 
-// 从localStorage读取用户偏好
 onMounted(() => {
-  const savedTheme = localStorage.getItem('theme')
+  const savedTheme = 
   if (savedTheme) {
     isDark.value = savedTheme === 'dark'
   } else {
@@ -36,7 +35,7 @@ onMounted(() => {
 
 // 监听系统主题变化
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-  if (!localStorage.getItem('theme')) {
+  if (!
     isDark.value = e.matches
   }
 })
@@ -44,7 +43,7 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e)
 // 切换深色模式
 const toggleDark = () => {
   isDark.value = !isDark.value
-  localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
+  
 }
 
 // 暴露给子组件
