@@ -3,6 +3,17 @@ import { seedData } from './seedData.js';
 
 let pool;
 
+// 创建类似 better-sqlite3 的 API 适配器
+function createStatementAdapter(pool) {
+  return function prepare(sql) {
+    return {
+      all: (...params) => pool.execute(sql, params).then(([rows]) => rows),
+      get: (...params) => pool.execute(sql, params).then(([rows]) => rows[0]),
+      run: (...params) => pool.execute(sql, params).then(([result]) => result)
+    };
+  };
+}
+
 export function getPool() {
   if (!pool) {
     pool = mysql.createPool({
@@ -20,7 +31,10 @@ export function getPool() {
 }
 
 export function getDatabase() {
-  return getPool();
+  // 返回类似 better-sqlite3 的 API
+  return {
+    prepare: createStatementAdapter(getPool())
+  };
 }
 
 export async function initDatabase() {
