@@ -388,6 +388,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
+import { familyApi, todoApi, checkinApi } from '@/api'
 
 // 问候语
 const greeting = computed(() => {

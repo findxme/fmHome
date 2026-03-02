@@ -113,3 +113,30 @@ export const preferencesApi = {
 }
 
 export default api
+
+// 待办事项API
+export const todoApi = {
+  getAll: () => api.get('/extra/todos'),
+  add: (content) => api.post('/extra/todos', { content }),
+  update: (id, data) => api.put(`/extra/todos/${id}`, data),
+  delete: (id) => api.delete(`/extra/todos/${id}`)
+}
+
+// 打卡API
+export const checkinApi = {
+  getHistory: () => api.get('/extra/checkins'),
+  checkin: () => api.post('/extra/checkins')
+}
+
+// 购物模板API
+export const templateApi = {
+  getAll: () => api.get('/extra/shopping-templates'),
+  save: (name, items) => api.post('/extra/shopping-templates', { name, items }),
+  delete: (id) => api.delete(`/extra/shopping-templates/${id}`)
+}
+
+// 购买历史API
+export const historyApi = {
+  get: () => api.get('/extra/purchase-history'),
+  save: (items) => api.post('/extra/purchase-history', { items })
+}
