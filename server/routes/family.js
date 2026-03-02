@@ -5,7 +5,7 @@ import { randomUUID } from 'crypto';
 const router = express.Router();
 
 // 创建家庭
-router.post('/', async (req, res) => {
+router.post('/create', async (req, res) => {
   const db = getDatabase();
   const { name } = req.body;
 
@@ -41,7 +41,7 @@ router.post('/', async (req, res) => {
 });
 
 // 加入家庭
-router.post('/', async (req, res) => {
+router.post('/join', async (req, res) => {
   const db = getDatabase();
   const { invite_code, member_name } = req.body;
 
@@ -106,7 +106,7 @@ router.put('/', async (req, res) => {
 });
 
 // 刷新邀请码
-router.post('/', async (req, res) => {
+router.post('/refresh-code', async (req, res) => {
   const db = getDatabase();
   try {
     const newCode = generateInviteCode();

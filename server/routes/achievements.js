@@ -20,12 +20,12 @@ const achievements = [
 ];
 
 // 获取所有成就定义
-router.get('/', async (req, res) => {
+router.get('/definitions', async (req, res) => {
   res.json({ success: true, data: achievements });
 });
 
 // 获取用户成就进度
-router.get('/', async (req, res) => {
+router.get('/my', async (req, res) => {
   const db = getDatabase();
   try {
     const userAchievements = await db.prepare('SELECT * FROM user_achievements').all();

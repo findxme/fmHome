@@ -10,7 +10,10 @@ export const dishApi = {
   getAll: (params) => api.get('/dishes', { params }),
   getById: (id) => api.get(`/dishes/${id}`),
   getCategories: () => api.get('/dishes/categories/list'),
-  getDailyRecommend: () => api.get('/dishes/recommend/daily')
+  getDailyRecommend: () => api.get('/dishes/recommend/daily'),
+  create: (data) => api.post('/dishes', data),
+  update: (id, data) => api.put(`/dishes/${id}`, data),
+  delete: (id) => api.delete(`/dishes/${id}`)
 }
 
 // 食材API
@@ -55,9 +58,9 @@ export const stockApi = {
 
 // 菜谱收藏API
 export const favoritesApi = {
-  getAll: () => api.get('/favorites'),
-  add: (dishId) => api.post('/favorites', { dish_id: dishId }),
-  remove: (dishId) => api.delete(`/favorites/${dishId}`),
+  getAll: () => api.get('/favorites/list'),
+  add: (dishId) => api.post('/favorites/add', { dish_id: dishId }),
+  remove: (dishId) => api.delete(`/favorites/remove/${dishId}`),
   check: (dishId) => api.get(`/favorites/check/${dishId}`)
 }
 
@@ -91,6 +94,21 @@ export const familyApi = {
   update: (name) => api.put('/family', { name }),
   refreshCode: () => api.post('/family/refresh-code'),
   removeMember: (id) => api.delete(`/family/members/${id}`)
+}
+
+// 购物车API
+export const cartApi = {
+  getAll: () => api.get('/cart'),
+  add: (dishId, dishName, quantity) => api.post('/cart', { dish_id: dishId, dish_name: dishName, quantity }),
+  update: (dishId, quantity) => api.put(`/cart/${dishId}`, { quantity }),
+  remove: (dishId) => api.delete(`/cart/item/${dishId}`),
+  clear: () => api.delete('/cart/clear')
+}
+
+// 用户偏好API
+export const preferencesApi = {
+  get: () => api.get('/preferences'),
+  update: (data) => api.put('/preferences', data)
 }
 
 export default api

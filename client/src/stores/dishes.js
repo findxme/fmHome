@@ -1,15 +1,59 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { dishApi } from '@/api'
+import { dishApi, cartApi, preferencesApi } from '@/api'
 
-// 初始化示例菜品数据
-const initSampleDishes = () => {
-  const existing = localStorage.getItem('fmhome_sample_dishes')
-  if (existing) {
-    return JSON.parse(existing)
+export const useDishStore = defineStore('dishes', () => {
+  const dishes = ref([])
+  const dailyRecommend = ref([])
+  const categories = ref([])
+  const loading = ref(false)
+  const currentDish = ref(null)
+  const cart = ref([])
+  const preferences = ref({
+    taste: '不限',
+    difficulty: '不限'
+  })
+
+  // 加载菜品列表 - 从 MySQL 获取
+  const loadDishes = async () => {
+    loading.value = true
+    try {
+      // 从 API 加载菜品
+      const res = await dishApi.getAll()
+      dishes.value = res.data.data || []
+      
+      // 如果数据库为空，加载示例菜品
+      if (dishes.value.length === 0) {
+        await loadSampleDishesToDatabase()
+      }
+    } catch (e) {
+      console.error('加载菜品失败:', e)
+      dishes.value = []
+    } finally {
+      loading.value = false
+    }
   }
 
-  const sampleDishes = [
+  // 将示例菜品加载到数据库
+  const loadSampleDishesToDatabase = async () => {
+    const sampleDishes = getSampleDishes()
+    for (const dish of sampleDishes) {
+      try {
+        await dishApi.create({
+          id: dish.id,
+          ...dish
+        })
+      } catch (e) {
+        console.log('菜品已存在:', dish.name)
+      }
+    }
+    // 重新加载
+    const res = await dishApi.getAll()
+    dishes.value = res.data.data || []
+  }
+
+  // 获取示例菜品数据
+  const getSampleDishes = () => [
     {
       id: 'sample_1',
       name: '红烧肉',
@@ -508,92 +552,6 @@ const initSampleDishes = () => {
     }
   ]
 
-  localStorage.setItem('fmhome_sample_dishes', JSON.stringify(sampleDishes))
-  return sampleDishes
-}
-
-export const useDishStore = defineStore('dishes', () => {
-  const dishes = ref([])
-  const dailyRecommend = ref([])
-  const categories = ref([])
-  const loading = ref(false)
-  const currentDish = ref(null)
-  const cart = ref([])
-  const preferences = ref({
-    taste: '不限',
-    difficulty: '不限'
-  })
-
-  // 从本地存储恢复购物车
-  const savedCart = localStorage.getItem('fmhome_cart')
-  if (savedCart) {
-    cart.value = JSON.parse(savedCart)
-  }
-
-  // 加载菜品列表
-  const loadDishes = async () => {
-    loading.value = true
-    try {
-      // 加载示例菜品
-      const sampleDishes = initSampleDishes()
-
-      // 从本地存储加载自定义菜品
-      const customDishes = JSON.parse(localStorage.getItem('fmhome_custom_dishes') || '[]')
-
-      // 尝试从API加载
-      let apiDishes = []
-      try {
-        const res = await dishApi.getAll()
-        apiDishes = res.data.data || []
-      } catch (e) {
-        console.log('API加载失败，使用本地数据')
-      }
-
-      // 合并：示例菜品 -> 自定义菜品 -> API菜品
-      dishes.value = [...sampleDishes, ...customDishes, ...apiDishes]
-    } catch (e) {
-      console.error('加载菜品失败:', e)
-      dishes.value = []
-    } finally {
-      loading.value = false
-    }
-  }
-
-  // 删除自定义菜品
-  const deleteCustomDish = (dishId) => {
-    if (dishId.startsWith('custom_')) {
-      const customDishes = JSON.parse(localStorage.getItem('fmhome_custom_dishes') || '[]')
-      const filtered = customDishes.filter(d => d.id !== dishId)
-      localStorage.setItem('fmhome_custom_dishes', JSON.stringify(filtered))
-
-      // 同时从 dishes 中移除
-      dishes.value = dishes.value.filter(d => d.id !== dishId)
-    } else if (dishId.startsWith('sample_')) {
-      // 示例菜品标记为已删除
-      const sampleDishes = JSON.parse(localStorage.getItem('fmhome_sample_dishes') || '[]')
-      const filtered = sampleDishes.filter(d => d.id !== dishId)
-      localStorage.setItem('fmhome_sample_dishes', JSON.stringify(filtered))
-      dishes.value = dishes.value.filter(d => d.id !== dishId)
-    }
-  }
-
-  // 更新菜品
-  const updateDish = (dishId, updatedData) => {
-    if (dishId.startsWith('custom_')) {
-      const customDishes = JSON.parse(localStorage.getItem('fmhome_custom_dishes') || '[]')
-      const index = customDishes.findIndex(d => d.id === dishId)
-      if (index !== -1) {
-        customDishes[index] = { ...customDishes[index], ...updatedData }
-        localStorage.setItem('fmhome_custom_dishes', JSON.stringify(customDishes))
-        // 更新 store
-        const storeIndex = dishes.value.findIndex(d => d.id === dishId)
-        if (storeIndex !== -1) {
-          dishes.value[storeIndex] = { ...dishes.value[storeIndex], ...updatedData }
-        }
-      }
-    }
-  }
-
   // 加载每日推荐
   const loadDailyRecommend = async () => {
     try {
@@ -605,49 +563,136 @@ export const useDishStore = defineStore('dishes', () => {
     }
   }
 
-  // 添加自定义菜品
-  const addCustomDish = (dish) => {
-    dishes.value.unshift(dish)
-  }
-
-  // 保存购物车到本地存储
-  const saveCart = () => {
-    localStorage.setItem('fmhome_cart', JSON.stringify(cart.value))
-  }
-
-  const addToCart = (dish) => {
-    const existing = cart.value.find(item => item.id === dish.id)
-    if (existing) {
-      existing.quantity++
-    } else {
-      cart.value.push({ ...dish, quantity: 1 })
-    }
-    saveCart()
-  }
-
-  const removeFromCart = (dishId) => {
-    const index = cart.value.findIndex(item => item.id === dishId)
-    if (index > -1) {
-      cart.value.splice(index, 1)
-      saveCart()
-    }
-  }
-
-  const updateQuantity = (dishId, quantity) => {
-    const item = cart.value.find(item => item.id === dishId)
-    if (item) {
-      item.quantity = Math.max(0, quantity)
-      if (item.quantity === 0) {
-        removeFromCart(dishId)
-      } else {
-        saveCart()
+  // 添加自定义菜品 - 保存到 MySQL
+  const addCustomDish = async (dish) => {
+    try {
+      const newDish = {
+        id: `custom_${Date.now()}`,
+        ...dish,
+        isSample: false
       }
+      await dishApi.create(newDish)
+      dishes.value.unshift(newDish)
+      return newDish
+    } catch (e) {
+      console.error('添加菜品失败:', e)
+      throw e
     }
   }
 
-  const clearCart = () => {
-    cart.value = []
-    saveCart()
+  // 删除菜品 - 从 MySQL 删除
+  const deleteCustomDish = async (dishId) => {
+    try {
+      await dishApi.delete(dishId)
+      dishes.value = dishes.value.filter(d => d.id !== dishId)
+    } catch (e) {
+      console.error('删除菜品失败:', e)
+      throw e
+    }
+  }
+
+  // 更新菜品 - 更新 MySQL
+  const updateDish = async (dishId, updatedData) => {
+    try {
+      await dishApi.update(dishId, updatedData)
+      const index = dishes.value.findIndex(d => d.id === dishId)
+      if (index !== -1) {
+        dishes.value[index] = { ...dishes.value[index], ...updatedData }
+      }
+    } catch (e) {
+      console.error('更新菜品失败:', e)
+      throw e
+    }
+  }
+
+  // 加载购物车 - 从 MySQL 获取
+  const loadCart = async () => {
+    try {
+      const res = await cartApi.getAll()
+      cart.value = res.data.data || []
+    } catch (e) {
+      console.error('加载购物车失败:', e)
+      cart.value = []
+    }
+  }
+
+  // 添加到购物车 - 保存到 MySQL
+  const addToCart = async (dish) => {
+    try {
+      await cartApi.add(dish.id, dish.name, 1)
+      // 重新加载购物车
+      await loadCart()
+    } catch (e) {
+      console.error('添加到购物车失败:', e)
+      throw e
+    }
+  }
+
+  // 从购物车移除 - 从 MySQL 删除
+  const removeFromCart = async (dishId) => {
+    try {
+      await cartApi.remove(dishId)
+      cart.value = cart.value.filter(item => item.dish_id !== dishId)
+    } catch (e) {
+      console.error('移除购物车失败:', e)
+      throw e
+    }
+  }
+
+  // 更新购物车数量 - 更新 MySQL
+  const updateQuantity = async (dishId, quantity) => {
+    try {
+      if (quantity <= 0) {
+        await removeFromCart(dishId)
+      } else {
+        await cartApi.update(dishId, quantity)
+        // 重新加载购物车
+        await loadCart()
+      }
+    } catch (e) {
+      console.error('更新数量失败:', e)
+      throw e
+    }
+  }
+
+  // 清空购物车 - 清空 MySQL
+  const clearCart = async () => {
+    try {
+      await cartApi.clear()
+      cart.value = []
+    } catch (e) {
+      console.error('清空购物车失败:', e)
+      throw e
+    }
+  }
+
+  // 加载用户偏好 - 从 MySQL 获取
+  const loadPreferences = async () => {
+    try {
+      const res = await preferencesApi.get()
+      if (res.data.success && res.data.data) {
+        preferences.value = {
+          taste: res.data.data.taste_preference || '不限',
+          difficulty: res.data.data.difficulty_preference || '不限'
+        }
+      }
+    } catch (e) {
+      console.error('加载偏好失败:', e)
+    }
+  }
+
+  // 保存用户偏好 - 保存到 MySQL
+  const savePreferences = async (newPrefs) => {
+    try {
+      await preferencesApi.update({
+        taste_preference: newPrefs.taste,
+        difficulty_preference: newPrefs.difficulty
+      })
+      preferences.value = newPrefs
+    } catch (e) {
+      console.error('保存偏好失败:', e)
+      throw e
+    }
   }
 
   // 计算购物车中的食材汇总
@@ -685,6 +730,9 @@ export const useDishStore = defineStore('dishes', () => {
     loadDailyRecommend,
     addCustomDish,
     deleteCustomDish,
-    updateDish
+    updateDish,
+    loadCart,
+    loadPreferences,
+    savePreferences
   }
 })

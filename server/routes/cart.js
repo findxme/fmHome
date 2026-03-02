@@ -35,7 +35,7 @@ router.post('/', async (req, res) => {
 });
 
 // 更新数量
-router.put('/', async (req, res) => {
+router.put('/:dishId', async (req, res) => {
   const db = getDatabase();
   const { dishId } = req.params;
   const { quantity } = req.body;
@@ -51,8 +51,8 @@ router.put('/', async (req, res) => {
   }
 });
 
-// 删除
-router.delete('/', async (req, res) => {
+// 删除单个物品
+router.delete('/item/:dishId', async (req, res) => {
   const db = getDatabase();
   const { dishId } = req.params;
   try {
@@ -64,7 +64,7 @@ router.delete('/', async (req, res) => {
 });
 
 // 清空购物车
-router.delete('/', async (req, res) => {
+router.delete('/clear', async (req, res) => {
   const db = getDatabase();
   try {
     await db.prepare('DELETE FROM carts').run();

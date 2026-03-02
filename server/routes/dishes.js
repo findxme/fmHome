@@ -57,7 +57,129 @@ router.get('/categories', async (req, res) => {
   }
 });
 
-// 获取推荐菜品
+// 创建新菜品（自定义菜品）
+router.post('/', async (req, res) => {
+  try {
+    const {
+      id,
+      name,
+      category,
+      tags,
+      image_url,
+      difficulty,
+      cooking_time,
+      servings,
+      description,
+      ingredients,
+      steps,
+      tips
+    } = req.body;
+
+    if (!name || !category) {
+      return res.status(400).json({ success: false, message: '菜品名称和分类不能为空' });
+    }
+
+    const dishId = id || `custom_${Date.now()}`;
+
+    await getDatabase().prepare(`
+      INSERT INTO dishes (id, name, category, tags, image_url, difficulty, cooking_time, servings, description, ingredients, steps, tips)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      dishId,
+      name,
+      category,
+      tags || '',
+      image_url || '',
+      difficulty || '简单',
+      cooking_time || '30分钟',
+      servings || '2人份',
+      description || '',
+      JSON.stringify(ingredients || []),
+      JSON.stringify(steps || []),
+      JSON.stringify(tips || [])
+    );
+
+    const dish = await getDatabase().prepare('SELECT * FROM dishes WHERE id = ?').get(dishId);
+    dish.ingredients = JSON.parse(dish.ingredients || '[]');
+    dish.steps = JSON.parse(dish.steps || '[]');
+    dish.tips = JSON.parse(dish.tips || '[]');
+
+    res.json({ success: true, data: dish });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// 更新菜品
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      name,
+      category,
+      tags,
+      image_url,
+      difficulty,
+      cooking_time,
+      servings,
+      description,
+      ingredients,
+      steps,
+      tips
+    } = req.body;
+
+    await getDatabase().prepare(`
+      UPDATE dishes SET
+        name = COALESCE(?, name),
+        category = COALESCE(?, category),
+        tags = COALESCE(?, tags),
+        image_url = COALESCE(?, image_url),
+        difficulty = COALESCE(?, difficulty),
+        cooking_time = COALESCE(?, cooking_time),
+        servings = COALESCE(?, servings),
+        description = COALESCE(?, description),
+        ingredients = COALESCE(?, ingredients),
+        steps = COALESCE(?, steps),
+        tips = COALESCE(?, tips)
+      WHERE id = ?
+    `).run(
+      name,
+      category,
+      tags,
+      image_url,
+      difficulty,
+      cooking_time,
+      servings,
+      description,
+      ingredients ? JSON.stringify(ingredients) : null,
+      steps ? JSON.stringify(steps) : null,
+      tips ? JSON.stringify(tips) : null,
+      id
+    );
+
+    const dish = await getDatabase().prepare('SELECT * FROM dishes WHERE id = ?').get(id);
+    dish.ingredients = JSON.parse(dish.ingredients || '[]');
+    dish.steps = JSON.parse(dish.steps || '[]');
+    dish.tips = JSON.parse(dish.tips || '[]');
+
+    res.json({ success: true, data: dish });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// 删除菜品
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await getDatabase().prepare('DELETE FROM dishes WHERE id = ?').run(id);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// 获取根据食材搜索菜品
 router.get('/recommend', async (req, res) => {
   try {
     const dishes = await getDatabase().prepare(`

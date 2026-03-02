@@ -40,7 +40,7 @@ const getAIResponse = async (prompt) => {
 };
 
 // 智能推荐菜品
-router.post('/', async (req, res) => {
+router.post('/recommend', async (req, res) => {
   try {
     const { taste, difficulty, type, ingredients, count = 5 } = req.body;
 
@@ -78,7 +78,7 @@ router.post('/', async (req, res) => {
 });
 
 // AI 菜单规划
-router.post('/', async (req, res) => {
+router.post('/plan', async (req, res) => {
   try {
     const { days = 7, preferences } = req.body;
 
@@ -123,7 +123,7 @@ router.post('/', async (req, res) => {
 });
 
 // 烹饪问答
-router.post('/', async (req, res) => {
+router.post('/chat', async (req, res) => {
   try {
     const { question, context } = req.body;
 
@@ -143,7 +143,7 @@ router.post('/', async (req, res) => {
 });
 
 // 心情推荐
-router.post('/', async (req, res) => {
+router.post('/mood', async (req, res) => {
   try {
     const { mood, excludeIngredients } = req.body;
 
@@ -186,7 +186,7 @@ router.post('/', async (req, res) => {
 });
 
 // 季节推荐
-router.get('/', async (req, res) => {
+router.get('/seasonal', async (req, res) => {
   try {
     const month = new Date().getMonth() + 1;
 
@@ -230,8 +230,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-// 随机roll点推荐
-router.post('/', async (req, res) => {
+// 随机推荐
+router.post('/roll-dice', async (req, res) => {
   try {
     const { excludeDishes } = req.body;
 
@@ -267,7 +267,7 @@ router.post('/', async (req, res) => {
 });
 
 // 食材生成菜谱
-router.post('/', async (req, res) => {
+router.post('/ingredient-recipe', async (req, res) => {
   try {
     const { ingredients, excludeIngredients } = req.body;
 
@@ -312,7 +312,7 @@ router.post('/', async (req, res) => {
 });
 
 // 获取心情选项
-router.get('/', async (req, res) => {
+router.get('/mood-options', async (req, res) => {
   res.json({
     success: true,
     data: [

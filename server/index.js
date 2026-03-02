@@ -16,6 +16,7 @@ import cookingRoutes from './routes/cooking.js';
 import achievementsRoutes from './routes/achievements.js';
 import familyRoutes from './routes/family.js';
 import cartRoutes from './routes/cart.js';
+import preferencesRoutes from './routes/preferences.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -63,6 +64,7 @@ app.use('/api/cooking', cookingRoutes);
 app.use('/api/achievements', achievementsRoutes);
 app.use('/api/family', familyRoutes);
 app.use('/api/cart', cartRoutes);
+app.use('/api/preferences', preferencesRoutes);
 
 // 健康检查
 app.get('/api/health', (req, res) => {

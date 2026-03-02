@@ -33,7 +33,7 @@ router.get('/', async (req, res) => {
 });
 
 // 获取食材分类
-router.get('/', async (req, res) => {
+router.get('/categories', async (req, res) => {
   try {
     const categories = await getDatabase().prepare(`
       SELECT DISTINCT category, COUNT(*) as count
