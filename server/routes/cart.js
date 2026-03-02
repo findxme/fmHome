@@ -4,7 +4,7 @@ import { getDatabase } from '../database.js';
 const router = express.Router();
 
 // 获取购物车
-router.get(async (req, res) => {
+router.get('/', async (req, res) => {
   const db = getDatabase();
   try {
     const cart = await db.prepare('SELECT * FROM carts ORDER BY added_at DESC').all();
@@ -15,7 +15,7 @@ router.get(async (req, res) => {
 });
 
 // 添加到购物车
-router.post(async (req, res) => {
+router.post('/', async (req, res) => {
   const db = getDatabase();
   const { dish_id, dish_name, quantity = 1 } = req.body;
   try {
@@ -23,9 +23,9 @@ router.post(async (req, res) => {
     const existing = await db.prepare('SELECT * FROM carts WHERE dish_id = ?').get(dish_id);
 
     if (existing) {
-      db.prepare('UPDATE carts SET quantity = quantity + ? WHERE dish_id = ?').run(quantity, dish_id);
+      await db.prepare('UPDATE carts SET quantity = quantity + ? WHERE dish_id = ?').run(quantity, dish_id);
     } else {
-      db.prepare('INSERT INTO carts (dish_id, dish_name, quantity) VALUES (?, ?, ?)').run(dish_id, dish_name, quantity);
+      await db.prepare('INSERT INTO carts (dish_id, dish_name, quantity) VALUES (?, ?, ?)').run(dish_id, dish_name, quantity);
     }
 
     res.json({ success: true });
@@ -35,15 +35,15 @@ router.post(async (req, res) => {
 });
 
 // 更新数量
-router.put(async (req, res) => {
+router.put('/', async (req, res) => {
   const db = getDatabase();
   const { dishId } = req.params;
   const { quantity } = req.body;
   try {
     if (quantity <= 0) {
-      db.prepare('DELETE FROM carts WHERE dish_id = ?').run(dishId);
+      await db.prepare('DELETE FROM carts WHERE dish_id = ?').run(dishId);
     } else {
-      db.prepare('UPDATE carts SET quantity = ? WHERE dish_id = ?').run(quantity, dishId);
+      await db.prepare('UPDATE carts SET quantity = ? WHERE dish_id = ?').run(quantity, dishId);
     }
     res.json({ success: true });
   } catch (error) {
@@ -52,11 +52,11 @@ router.put(async (req, res) => {
 });
 
 // 删除
-router.delete(async (req, res) => {
+router.delete('/', async (req, res) => {
   const db = getDatabase();
   const { dishId } = req.params;
   try {
-    db.prepare('DELETE FROM carts WHERE dish_id = ?').run(dishId);
+    await db.prepare('DELETE FROM carts WHERE dish_id = ?').run(dishId);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -64,10 +64,10 @@ router.delete(async (req, res) => {
 });
 
 // 清空购物车
-router.delete(async (req, res) => {
+router.delete('/', async (req, res) => {
   const db = getDatabase();
   try {
-    db.prepare('DELETE FROM carts').run();
+    await db.prepare('DELETE FROM carts').run();
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });

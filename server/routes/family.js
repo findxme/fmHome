@@ -5,7 +5,7 @@ import { randomUUID } from 'crypto';
 const router = express.Router();
 
 // 创建家庭
-router.post(async (req, res) => {
+router.post('/', async (req, res) => {
   const db = getDatabase();
   const { name } = req.body;
 
@@ -20,13 +20,13 @@ router.post(async (req, res) => {
     const familyId = randomUUID();
     const inviteCode = generateInviteCode();
 
-    db.prepare(`
+    await db.prepare(`
       INSERT INTO families (id, name, invite_code, invite_expires_at)
       VALUES (?, ?, ?, datetime('now', '+7 days'))
     `).run(familyId, name, inviteCode);
 
     // 添加创建者为管理员
-    db.prepare(`
+    await db.prepare(`
       INSERT INTO family_members (family_id, member_name, role)
       VALUES (?, ?, 'admin')
     `).run(familyId, '我');
@@ -41,7 +41,7 @@ router.post(async (req, res) => {
 });
 
 // 加入家庭
-router.post(async (req, res) => {
+router.post('/', async (req, res) => {
   const db = getDatabase();
   const { invite_code, member_name } = req.body;
 
@@ -65,7 +65,7 @@ router.post(async (req, res) => {
       return res.json({ success: false, error: '你已经是家庭成员了' });
     }
 
-    db.prepare(`
+    await db.prepare(`
       INSERT INTO family_members (family_id, member_name, role)
       VALUES (?, ?, 'member')
     `).run(family.id, member_name);
@@ -79,7 +79,7 @@ router.post(async (req, res) => {
 });
 
 // 获取家庭信息
-router.get(async (req, res) => {
+router.get('/', async (req, res) => {
   const db = getDatabase();
   try {
     const family = await db.prepare('SELECT * FROM families LIMIT 1').get();
@@ -94,11 +94,11 @@ router.get(async (req, res) => {
 });
 
 // 更新家庭信息
-router.put(async (req, res) => {
+router.put('/', async (req, res) => {
   const db = getDatabase();
   const { name } = req.body;
   try {
-    db.prepare('UPDATE families SET name = ? WHERE id = (SELECT id FROM families LIMIT 1)').run(name);
+    await db.prepare('UPDATE families SET name = ? WHERE id = (SELECT id FROM families LIMIT 1)').run(name);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -106,11 +106,11 @@ router.put(async (req, res) => {
 });
 
 // 刷新邀请码
-router.post(async (req, res) => {
+router.post('/', async (req, res) => {
   const db = getDatabase();
   try {
     const newCode = generateInviteCode();
-    db.prepare(`
+    await db.prepare(`
       UPDATE families
       SET invite_code = ?, invite_expires_at = datetime('now', '+7 days')
       WHERE id = (SELECT id FROM families LIMIT 1)
@@ -122,11 +122,11 @@ router.post(async (req, res) => {
 });
 
 // 移除家庭成员
-router.delete(async (req, res) => {
+router.delete('/', async (req, res) => {
   const db = getDatabase();
   const { id } = req.params;
   try {
-    db.prepare('DELETE FROM family_members WHERE id = ? AND role != "admin"').run(id);
+    await db.prepare('DELETE FROM family_members WHERE id = ? AND role != "admin"').run(id);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });

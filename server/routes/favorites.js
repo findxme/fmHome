@@ -4,7 +4,7 @@ import { getDatabase } from '../database.js';
 const router = express.Router();
 
 // 获取收藏列表
-router.get(async (req, res) => {
+router.get('/', async (req, res) => {
   const db = getDatabase();
   try {
     const favorites = await db.prepare(`
@@ -20,7 +20,7 @@ router.get(async (req, res) => {
 });
 
 // 添加收藏
-router.post(async (req, res) => {
+router.post('/', async (req, res) => {
   const db = getDatabase();
   const { dish_id } = req.body;
   try {
@@ -33,11 +33,11 @@ router.post(async (req, res) => {
 });
 
 // 取消收藏
-router.delete(async (req, res) => {
+router.delete('/', async (req, res) => {
   const db = getDatabase();
   const { dishId } = req.params;
   try {
-    db.prepare('DELETE FROM dish_favorites WHERE dish_id = ?').run(dishId);
+    await db.prepare('DELETE FROM dish_favorites WHERE dish_id = ?').run(dishId);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -45,7 +45,7 @@ router.delete(async (req, res) => {
 });
 
 // 检查是否收藏
-router.get(async (req, res) => {
+router.get('/', async (req, res) => {
   const db = getDatabase();
   const { dishId } = req.params;
   try {

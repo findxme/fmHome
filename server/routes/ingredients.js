@@ -4,7 +4,7 @@ import { getDatabase } from '../database.js';
 const router = express.Router();
 
 // 获取所有食材
-router.get(async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const { category, search } = req.query;
     let ingredients;
@@ -33,7 +33,7 @@ router.get(async (req, res) => {
 });
 
 // 获取食材分类
-router.get(async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const categories = await getDatabase().prepare(`
       SELECT DISTINCT category, COUNT(*) as count

@@ -4,7 +4,7 @@ import { getDatabase } from '../database.js';
 const router = express.Router();
 
 // 获取所有菜品
-router.get(async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const { category, search, tag } = req.query;
     let dishes;
@@ -41,30 +41,8 @@ router.get(async (req, res) => {
   }
 });
 
-// 获取单个菜品详情（完整信息）
-router.get(async (req, res) => {
-  try {
-    const dish = await getDatabase().prepare(`
-      SELECT * FROM dishes WHERE id = ?
-    `).get(req.params.id);
-
-    if (!dish) {
-      return res.status(404).json({ success: false, message: '菜品不存在' });
-    }
-
-    // 解析JSON字段
-    dish.ingredients = JSON.parse(dish.ingredients || '[]');
-    dish.steps = JSON.parse(dish.steps || '[]');
-    dish.tips = JSON.parse(dish.tips || '[]');
-
-    res.json({ success: true, data: dish });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
 // 获取所有分类
-router.get(async (req, res) => {
+router.get('/categories', async (req, res) => {
   try {
     const categories = await getDatabase().prepare(`
       SELECT DISTINCT category, COUNT(*) as count
@@ -80,12 +58,12 @@ router.get(async (req, res) => {
 });
 
 // 获取推荐菜品
-router.get(async (req, res) => {
+router.get('/recommend', async (req, res) => {
   try {
     const dishes = await getDatabase().prepare(`
       SELECT id, name, category, tags, difficulty, cooking_time, description, image_url
       FROM dishes
-      ORDER BY RANDOM()
+      ORDER BY RAND()
       LIMIT 6
     `).all();
 
@@ -96,7 +74,7 @@ router.get(async (req, res) => {
 });
 
 // 根据食材搜索菜品
-router.get(async (req, res) => {
+router.get('/by-ingredients', async (req, res) => {
   try {
     const { ingredients } = req.query;
     if (!ingredients) {
@@ -117,6 +95,28 @@ router.get(async (req, res) => {
     });
 
     res.json({ success: true, data: dishes });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// 获取单个菜品详情（完整信息）- 必须放在最后
+router.get('/:id', async (req, res) => {
+  try {
+    const dish = await getDatabase().prepare(`
+      SELECT * FROM dishes WHERE id = ?
+    `).get(req.params.id);
+
+    if (!dish) {
+      return res.status(404).json({ success: false, message: '菜品不存在' });
+    }
+
+    // 解析JSON字段
+    dish.ingredients = JSON.parse(dish.ingredients || '[]');
+    dish.steps = JSON.parse(dish.steps || '[]');
+    dish.tips = JSON.parse(dish.tips || '[]');
+
+    res.json({ success: true, data: dish });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

@@ -1417,7 +1417,7 @@ export const seedData = (db) => {
 
   // 初始化用户偏好
   db.prepare(`
-    INSERT OR IGNORE INTO user_preferences (id) VALUES (1)
+    INSERT IGNORE INTO user_preferences (id) VALUES (1)
   `).run();
 
   console.log(`✅ 已导入 ${dishes.length} 道菜品和 ${ingredients.length} 种食材`);
