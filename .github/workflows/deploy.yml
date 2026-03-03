@@ -35,6 +35,9 @@ jobs:
             else
               echo ">>> 更新代码..."
             fi
+            # 配置 Git 代理（根据环境选择）
+            git config --global http.proxy "${{ secrets.HTTP_PROXY }}"
+            git config --global https.proxy "${{ secrets.HTTPS_PROXY }}"
             git fetch origin main
             git reset --hard origin/main
 
