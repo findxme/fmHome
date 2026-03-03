@@ -8,11 +8,35 @@ on:
   workflow_dispatch:
 
 jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/fmhome:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
   deploy:
+    needs: build-and-push
     runs-on: ubuntu-latest
 
     steps:
-      # 1. SSH 进服务器，拉代码，本地构建并启动
       - name: Deploy on server
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -25,25 +49,10 @@ jobs:
             set -e
             DEPLOY_PATH="${{ secrets.DEPLOY_PATH || '/opt/fmhome' }}"
 
-            # 拉取最新代码（兼容目录已存在但非 git 仓库的情况）
             mkdir -p ${DEPLOY_PATH}
             cd ${DEPLOY_PATH}
-            if [ ! -d ".git" ]; then
-              echo ">>> 初始化仓库..."
-              git init
-              git remote add origin https://github.com/findxme/fmHome.git
-            else
-              echo ">>> 更新代码..."
-            fi
-            # 配置 Git 代理（如果有配置代理则使用）
-            if [ -n "${{ secrets.HTTP_PROXY }}" ]; then
-              git config --global http.proxy "${{ secrets.HTTP_PROXY }}"
-              git config --global https.proxy "${{ secrets.HTTPS_PROXY }}"
-            fi
-            git fetch origin main
-            git reset --hard origin/main
 
-            # 写入环境变量（用 printf 避免 heredoc 缩进问题）
+            # 写入环境变量
             echo ">>> 写入 .env..."
             printf 'CLAUDE_API_KEY=%s\nCLAUDE_API_URL=%s\nNODE_ENV=production\nPORT=3001\nDB_HOST=%s\nDB_PORT=%s\nDB_USER=%s\nDB_PASSWORD=%s\nDB_NAME=%s\n' \
               '${{ secrets.CLAUDE_API_KEY }}' \
@@ -54,16 +63,74 @@ jobs:
               '${{ secrets.DB_PASSWORD }}' \
               '${{ secrets.DB_NAME }}' > .env
 
+            # 创建简化的 docker-compose.yml（只运行 app，不包含构建）
+            cat > docker-compose.yml << 'EOF'
+version: '3.8'
+
+services:
+  app:
+    image: ${{ secrets.DOCKER_USERNAME }}/fmhome:latest
+    container_name: fmhome-app
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY}
+      - CLAUDE_API_URL=${CLAUDE_API_URL}
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASSWORD=fm123
+      - DB_NAME=fm_home
+    volumes:
+      - ./data:/app/server/data
+      - ./logs:/app/server/logs
+    networks:
+      - fmhome-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  mysql:
+    image: mysql:8.0
+    container_name: fmhome-mysql
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=fm123
+      - MYSQL_DATABASE=fm_home
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - fmhome-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+networks:
+  fmhome-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+EOF
+
             # 停止旧容器
             echo ">>> 停止旧容器..."
             docker-compose down || true
 
-            # 本地构建镜像并启动
-            echo ">>> 构建镜像并启动..."
-            docker-compose up --build -d
+            # 拉取最新镜像
+            echo ">>> 拉取最新镜像..."
+            docker-compose pull
 
-            # 清理旧镜像
-            docker image prune -f
+            # 启动服务
+            echo ">>> 启动服务..."
+            docker-compose up -d
 
             # 验证
             echo ">>> 等待服务启动..."
