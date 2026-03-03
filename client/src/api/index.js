@@ -114,15 +114,6 @@ export const checkinApi = {
   remove: (date) => api.delete(`/checkin/${date}`)
 }
 
-// 购物车API
-export const cartApi = {
-  getAll: () => api.get('/cart'),
-  add: (dishId, dishName, quantity) => api.post('/cart', { dish_id: dishId, dish_name: dishName, quantity }),
-  update: (dishId, quantity) => api.put(`/cart/${dishId}`, { quantity }),
-  remove: (dishId) => api.delete(`/cart/item/${dishId}`),
-  clear: () => api.delete('/cart/clear')
-}
-
 // 用户偏好API
 export const preferencesApi = {
   get: () => api.get('/preferences'),
@@ -137,12 +128,6 @@ export const todoApi = {
   add: (content) => api.post('/extra/todos', { content }),
   update: (id, data) => api.put(`/extra/todos/${id}`, data),
   delete: (id) => api.delete(`/extra/todos/${id}`)
-}
-
-// 打卡API
-export const checkinApi = {
-  getHistory: () => api.get('/extra/checkins'),
-  checkin: () => api.post('/extra/checkins')
 }
 
 // 购物模板API
