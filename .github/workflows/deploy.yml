@@ -25,6 +25,10 @@ jobs:
             set -e
             DEPLOY_PATH="${{ secrets.DEPLOY_PATH || '/opt/fmhome' }}"
 
+            # 清除旧的 Git 代理配置
+            git config --global --unset http.proxy
+            git config --global --unset https.proxy
+
             # 拉取最新代码
             mkdir -p ${DEPLOY_PATH}
             cd ${DEPLOY_PATH}
@@ -36,7 +40,7 @@ jobs:
               echo ">>> 更新代码..."
             fi
 
-            # 配置 GitHub 加速（国内服务器使用）
+            # 配置 GitHub 镜像加速
             git config --global url."https://ghproxy.com/https://github.com/".insteadOf "https://github.com/"
 
             git fetch origin main
