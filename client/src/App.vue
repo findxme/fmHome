@@ -20,31 +20,26 @@
 import { ref, onMounted } from 'vue'
 import BottomNav from '@/components/BottomNav.vue'
 import ThemeSelector from '@/components/ThemeSelector.vue'
+import { useDishStore } from '@/stores/dishes'
 
 const isDark = ref(false)
+const store = useDishStore()
 
-// 从localStorage读取用户偏好
 onMounted(() => {
-  const savedTheme = localStorage.getItem('theme')
-  if (savedTheme) {
-    isDark.value = savedTheme === 'dark'
-  } else {
-    // 跟随系统设置
-    isDark.value = window.matchMedia('(prefers-color-scheme: dark)').matches
-  }
+  // 跟随系统设置
+  isDark.value = window.matchMedia('(prefers-color-scheme: dark)').matches
+  // 加载购物车
+  store.loadCart()
 })
 
 // 监听系统主题变化
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-  if (!localStorage.getItem('theme')) {
-    isDark.value = e.matches
-  }
+  isDark.value = e.matches
 })
 
 // 切换深色模式
 const toggleDark = () => {
   isDark.value = !isDark.value
-  localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
 }
 
 // 暴露给子组件

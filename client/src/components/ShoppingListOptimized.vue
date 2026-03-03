@@ -358,7 +358,6 @@ const totalCount = computed(() => internalItems.value.length)
 const checkedCount = computed(() => internalItems.value.filter(i => i.checked).length)
 
 const updateItem = (item) => {
-  localStorage.setItem(`shopping_item_${item.key}`, item.checked)
   emit('update', internalItems.value)
 }
 

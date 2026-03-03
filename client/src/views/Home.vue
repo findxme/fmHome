@@ -212,7 +212,7 @@ const toggleTheme = () => {
     toggleDark()
   } else {
     isDark.value = !isDark.value
-    localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
+    
   }
 }
 

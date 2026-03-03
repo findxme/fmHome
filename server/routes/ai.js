@@ -1,10 +1,10 @@
 import express from 'express';
 import { getDatabase } from '../database.js';
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 
 const router = express.Router();
 
-// Claude AI 集成（使用 OpenAI 兼容接口）
+// Claude AI 集成
 const getAIResponse = async (prompt) => {
   const apiKey = process.env.CLAUDE_API_KEY;
 
@@ -13,27 +13,27 @@ const getAIResponse = async (prompt) => {
   }
 
   try {
-    const openai = new OpenAI({
+    const anthropic = new Anthropic({
       apiKey: apiKey,
       baseURL: process.env.CLAUDE_API_URL || 'https://api.anthropic.com/v1',
     });
 
-    const response = await openai.chat.completions.create({
+    const response = await anthropic.messages.create({
       model: 'claude-3-sonnet-20240229',
+      max_tokens: 1000,
+      system: '你是一个专业的家庭厨师助手，擅长根据用户需求推荐菜品、规划菜单、解答烹饪问题。请用简洁、实用的方式回复。',
       messages: [
-        {
-          role: 'system',
-          content: '你是一个专业的家庭厨师助手，擅长根据用户需求推荐菜品、规划菜单、解答烹饪问题。请用简洁、实用的方式回复。'
-        },
         {
           role: 'user',
           content: prompt
         }
-      ],
-      max_tokens: 1000,
+      ]
     });
 
-    return { success: true, data: response.choices[0].message.content };
+    // 从 content 数组中找到 text 类型的回复
+    const textContent = response.content.find(c => c.type === 'text');
+    const replyText = textContent ? textContent.text : '';
+    return { success: true, data: replyText };
   } catch (error) {
     return { success: false, message: error.message };
   }
@@ -46,7 +46,7 @@ router.post('/recommend', async (req, res) => {
 
     // 获取数据库中的菜品
     const db = getDatabase();
-    let dishes = db.prepare('SELECT * FROM dishes').all();
+    let dishes = await db.prepare('SELECT * FROM dishes').all();
 
     // 基础筛选
     if (taste && taste !== '不限') {
@@ -143,7 +143,7 @@ router.post('/chat', async (req, res) => {
 });
 
 // 心情推荐
-router.post('/recommend-by-mood', async (req, res) => {
+router.post('/mood', async (req, res) => {
   try {
     const { mood, excludeIngredients } = req.body;
 
@@ -158,7 +158,7 @@ router.post('/recommend-by-mood', async (req, res) => {
     const recommendedTags = moodMapping[mood] || [];
 
     const db = getDatabase();
-    let dishes = db.prepare('SELECT * FROM dishes').all();
+    let dishes = await db.prepare('SELECT * FROM dishes').all();
 
     // 根据心情筛选
     if (recommendedTags.length > 0) {
@@ -186,7 +186,7 @@ router.post('/recommend-by-mood', async (req, res) => {
 });
 
 // 季节推荐
-router.get('/seasonal', (req, res) => {
+router.get('/seasonal', async (req, res) => {
   try {
     const month = new Date().getMonth() + 1;
 
@@ -206,7 +206,7 @@ router.get('/seasonal', (req, res) => {
     const config = seasonalMapping[season];
 
     const db = getDatabase();
-    let dishes = db.prepare('SELECT * FROM dishes').all();
+    let dishes = await db.prepare('SELECT * FROM dishes').all();
 
     dishes = dishes.filter(d => {
       const tags = d.tags || '';
@@ -230,13 +230,13 @@ router.get('/seasonal', (req, res) => {
   }
 });
 
-// 随机roll点推荐
-router.post('/roll-dice', (req, res) => {
+// 随机推荐
+router.post('/roll-dice', async (req, res) => {
   try {
     const { excludeDishes } = req.body;
 
     const db = getDatabase();
-    let dishes = db.prepare('SELECT * FROM dishes').all();
+    let dishes = await db.prepare('SELECT * FROM dishes').all();
 
     // 排除已选择的
     if (excludeDishes && excludeDishes.length > 0) {
@@ -312,7 +312,7 @@ router.post('/ingredient-recipe', async (req, res) => {
 });
 
 // 获取心情选项
-router.get('/mood-options', (req, res) => {
+router.get('/mood-options', async (req, res) => {
   res.json({
     success: true,
     data: [
@@ -338,9 +338,9 @@ function getMoodReason(mood) {
 }
 
 // 生成默认菜单计划
-function generateDefaultPlan(days) {
+async function generateDefaultPlan(days) {
   const db = getDatabase();
-  const dishes = db.prepare('SELECT * FROM dishes').all();
+  const dishes = await db.prepare('SELECT * FROM dishes').all();
   const categories = ['午餐', '晚餐'];
 
   const plan = {

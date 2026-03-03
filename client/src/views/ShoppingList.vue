@@ -168,6 +168,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDishStore } from '@/stores/dishes'
+import { shoppingApi, templateApi, historyApi } from '@/api'
 import ShoppingListOptimized from '@/components/ShoppingListOptimized.vue'
 
 const router = useRouter()
@@ -186,6 +187,7 @@ const tabs = [
 
 // 购物清单数据
 const shoppingListItems = ref([])
+const currentListId = ref(null)
 
 // 模板数据
 const templates = ref([
@@ -210,8 +212,20 @@ onMounted(() => {
   loadHistory()
 })
 
-const loadShoppingList = () => {
-  const savedList = localStorage.getItem('fmhome_shopping_list')
+const loadShoppingList = async () => {
+  try {
+    const res = await shoppingApi.get()
+    if (res.data?.data) {
+      currentListId.value = res.data.data.id
+      if (res.data.data.items?.length > 0) {
+        shoppingListItems.value = res.data.data.items
+        return
+      }
+    }
+  } catch (e) {
+    console.error('加载购物清单失败:', e)
+  }
+  // 降级到本地存储
   if (savedList) {
     const parsed = JSON.parse(savedList)
     if (parsed.length > 0) {
@@ -224,17 +238,28 @@ const loadShoppingList = () => {
   }
 }
 
-const loadTemplates = () => {
-  const saved = localStorage.getItem('fmhome_templates')
-  if (saved) {
-    templates.value = [...templates.value, ...JSON.parse(saved)]
+const loadTemplates = async () => {
+  try {
+    const res = await templateApi.getAll()
+    if (res.data?.data?.length > 0) {
+      templates.value = [...templates.value, ...res.data.data]
+    }
+  } catch (e) {
+    console.error('加载模板失败:', e)
   }
 }
 
-const loadHistory = () => {
-  const saved = localStorage.getItem('fmhome_purchase_history')
-  if (saved) {
-    purchaseHistory.value = JSON.parse(saved)
+const loadHistory = async () => {
+  try {
+    const res = await historyApi.get()
+    if (res.data?.data?.length > 0) {
+      purchaseHistory.value = res.data.data.map(h => ({
+        date: h.purchased_at.split('T')[0],
+        items: h.items
+      }))
+    }
+  } catch (e) {
+    console.error('加载历史失败:', e)
   }
 
   // 计算常购食材
@@ -270,10 +295,8 @@ const saveAsTemplate = () => {
     items: shoppingListItems.value.map(i => i.name)
   }
 
-  const saved = localStorage.getItem('fmhome_templates')
   const existing = saved ? JSON.parse(saved) : []
   existing.push(newTemplate)
-  localStorage.setItem('fmhome_templates', JSON.stringify(existing))
 
   templates.value.push(newTemplate)
   newTemplateName.value = ''
@@ -290,9 +313,19 @@ const reuseHistory = (record) => {
   activeTab.value = 'current'
 }
 
-const handleUpdate = (items) => {
+const handleUpdate = async (items) => {
   shoppingListItems.value = items
-  localStorage.setItem('fmhome_shopping_list', JSON.stringify(items))
+  // 保存到数据库，包含ID以更新现有清单
+  try {
+    const res = await shoppingApi.save({ id: currentListId.value, items })
+    if (res.data?.data?.id) {
+      currentListId.value = res.data.data.id
+    }
+  } catch (e) {
+    console.error('保存购物清单失败:', e)
+  }
+
+  // 保存到本地存储作为备份
 
   // 保存到历史记录（当全部勾选时）
   if (items.length > 0 && items.every(i => i.checked)) {
@@ -301,27 +334,20 @@ const handleUpdate = (items) => {
       date: today,
       items: items.map(i => i.name)
     }
-
-    const saved = localStorage.getItem('fmhome_purchase_history')
-    const history = saved ? JSON.parse(saved) : []
-
-    // 避免重复添加同一天
-    const existingIndex = history.findIndex(h => h.date === today)
-    if (existingIndex >= 0) {
-      history[existingIndex] = historyItem
-    } else {
-      history.unshift(historyItem)
+    try {
+      await historyApi.save(historyItem.items)
+    } catch (e) {
+      console.error('保存购买历史失败:', e)
     }
-
-    // 只保留30条记录
-    if (history.length > 30) history.pop()
-
-    localStorage.setItem('fmhome_purchase_history', JSON.stringify(history))
   }
 }
 
-const clearList = () => {
+const clearList = async () => {
   shoppingListItems.value = []
-  localStorage.removeItem('fmhome_shopping_list')
+  try {
+    await shoppingApi.save({ id: currentListId.value, items: [] })
+  } catch (e) {
+    console.error('清空购物清单失败:', e)
+  }
 }
 </script>

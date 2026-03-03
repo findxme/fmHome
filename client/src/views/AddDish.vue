@@ -324,6 +324,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useDishStore } from '@/stores/dishes'
+import { dishApi } from '@/api'
 import { v4 as uuidv4 } from 'uuid'
 
 const router = useRouter()
@@ -431,81 +432,52 @@ const removeStep = (index) => {
   dish.steps.splice(index, 1)
 }
 
-const saveDish = () => {
+const saveDish = async () => {
   const filteredIngredients = dish.ingredients.filter(i => i.name && i.name.trim())
   const filteredSteps = dish.steps.filter(s => (s.title && s.title.trim()) || (s.description && s.description.trim()))
 
-  if (isEditMode.value) {
-    // 编辑模式：更新菜品
-    const updatedData = {
-      name: dish.name,
-      category: dish.category,
-      difficulty: dish.difficulty,
-      cooking_time: dish.cooking_time,
-      servings: dish.servings,
-      description: dish.description,
-      tags: dish.tags,
-      ingredients: filteredIngredients,
-      steps: filteredSteps,
-      images: dish.images && dish.images.length > 0 ? dish.images : [dish.image_url || imageOptions[0]],
-      video: dish.video || '',
-      image_url: dish.images?.[0] || dish.image_url || imageOptions[0]
-    }
-
-    // 更新本地存储
-    if (editDishId.value.startsWith('custom_')) {
-      const customDishes = JSON.parse(localStorage.getItem('fmhome_custom_dishes') || '[]')
-      const index = customDishes.findIndex(d => d.id === editDishId.value)
-      if (index !== -1) {
-        customDishes[index] = { ...customDishes[index], ...updatedData }
-        localStorage.setItem('fmhome_custom_dishes', JSON.stringify(customDishes))
-      }
-    } else if (editDishId.value.startsWith('sample_')) {
-      // 示例菜品更新
-      const sampleDishes = JSON.parse(localStorage.getItem('fmhome_sample_dishes') || '[]')
-      const index = sampleDishes.findIndex(d => d.id === editDishId.value)
-      if (index !== -1) {
-        sampleDishes[index] = { ...sampleDishes[index], ...updatedData }
-        localStorage.setItem('fmhome_sample_dishes', JSON.stringify(sampleDishes))
-      }
-    }
-
-    // 更新 store
-    dishStore.updateDish(editDishId.value, updatedData)
-    showToast('✅', '菜品更新成功！')
-  } else {
-    // 新增模式
-    const newDish = {
-      id: `custom_${uuidv4().slice(0, 8)}`,
-      name: dish.name,
-      category: dish.category,
-      difficulty: dish.difficulty,
-      cooking_time: dish.cooking_time,
-      servings: dish.servings,
-      description: dish.description,
-      tags: dish.tags,
-      ingredients: filteredIngredients,
-      steps: filteredSteps,
-      images: dish.images && dish.images.length > 0 ? dish.images : [dish.image_url || imageOptions[0]],
-      video: dish.video || '',
-      image_url: dish.images?.[0] || dish.image_url || imageOptions[0],
-      rating: '5.0',
-      isCustom: true,
-      createdAt: new Date().toISOString()
-    }
-
-    // 保存到本地存储
-    const customDishes = JSON.parse(localStorage.getItem('fmhome_custom_dishes') || '[]')
-    customDishes.unshift(newDish)
-    localStorage.setItem('fmhome_custom_dishes', JSON.stringify(customDishes))
-
-    // 添加到 store
-    dishStore.addCustomDish(newDish)
-    showToast('✅', '菜品添加成功！')
+  if (!dish.name || !dish.category) {
+    showToast('❌', '请填写必填字段！')
+    return
   }
 
-  setTimeout(() => {
-    router.push('/')
-  }, 1000)
+  const dishData = {
+    name: dish.name,
+    category: dish.category,
+    difficulty: dish.difficulty,
+    cooking_time: dish.cooking_time,
+    servings: dish.servings,
+    description: dish.description,
+    tags: dish.tags,
+    ingredients: filteredIngredients,
+    steps: filteredSteps,
+    images: dish.images && dish.images.length > 0 ? dish.images : [dish.image_url || imageOptions[0]],
+    video: dish.video || '',
+    image_url: dish.images?.[0] || dish.image_url || imageOptions[0],
+    rating: '5.0',
+    is_custom: true
+  }
+
+  try {
+    if (isEditMode.value) {
+      // 编辑模式
+      const dishId = editDishId.value.replace('custom_', '').replace('sample_', '')
+      await dishApi.update(dishId, dishData)
+    } else {
+      // 新增模式
+      await dishApi.create(dishData)
+    }
+
+    // 刷新 store
+    await dishStore.loadDishes()
+    showToast('✅', '菜品保存成功！')
+
+    setTimeout(() => {
+      router.push('/')
+    }, 1000)
+  } catch (e) {
+    console.error('保存菜品失败:', e)
+    showToast('❌', '保存失败：' + e.message)
+  }
 }
 </script>

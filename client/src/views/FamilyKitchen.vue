@@ -388,6 +388,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
+import { familyApi, todoApi, checkinApi } from '@/api'
 
 // 问候语
 const greeting = computed(() => {
@@ -411,7 +412,6 @@ const familyMembers = ref([])
 
 // 从本地存储恢复
 onMounted(() => {
-  const saved = localStorage.getItem('fmhome_family_members')
   if (saved) {
     familyMembers.value = JSON.parse(saved)
   }
@@ -419,7 +419,6 @@ onMounted(() => {
 
 // 保存到本地存储
 const saveMembers = () => {
-  localStorage.setItem('fmhome_family_members', JSON.stringify(familyMembers.value))
 }
 
 // 获取成员名字
@@ -487,30 +486,44 @@ const badges = ref([
 
 // 待办事项
 const todos = ref([])
-onMounted(() => {
-  const savedTodos = localStorage.getItem('fmhome_todos')
-  if (savedTodos) {
-    todos.value = JSON.parse(savedTodos)
+onMounted(async () => {
+  try {
+    const res = await todoApi.getAll()
+    if (res.data?.data) {
+      todos.value = res.data.data.map(t => ({
+        id: t.id,
+        text: t.content,
+        completed: t.completed,
+        createdAt: t.created_at
+      }))
+    }
+  } catch (e) {
+    console.error('加载待办失败:', e)
   }
 })
 
-const saveTodos = () => {
-  localStorage.setItem('fmhome_todos', JSON.stringify(todos.value))
+const saveTodos = async () => {
+  // 已实时保存到数据库
 }
 
 const showAddTodo = ref(false)
 const newTodo = reactive({ text: '', cooker: null })
 
-const addTodo = () => {
+const addTodo = async () => {
   if (newTodo.text) {
-    todos.value.push({
-      id: uuidv4(),
-      text: newTodo.text,
-      cooker: newTodo.cooker || null,
-      completed: false,
-      createdAt: new Date().toISOString()
-    })
-    saveTodos()
+    try {
+      const res = await todoApi.add(newTodo.text)
+      if (res.data?.data) {
+        todos.value.unshift({
+          id: res.data.data.id,
+          text: res.data.data.content,
+          completed: res.data.data.completed,
+          createdAt: res.data.data.created_at
+        })
+      }
+    } catch (e) {
+      console.error('添加待办失败:', e)
+    }
     newTodo.text = ''
     newTodo.cooker = null
     showAddTodo.value = false
@@ -518,33 +531,39 @@ const addTodo = () => {
   }
 }
 
-const toggleTodo = (id) => {
+const toggleTodo = async (id) => {
   const todo = todos.value.find(t => t.id === id)
   if (todo) {
-    todo.completed = !todo.completed
-    saveTodos()
-    if (todo.completed) {
-      showToast('🎉', '完成一项！')
+    try {
+      await todoApi.update(id, { content: todo.text, completed: !todo.completed })
+      todo.completed = !todo.completed
+      if (todo.completed) {
+        showToast('🎉', '完成一项！')
+      }
+    } catch (e) {
+      console.error('更新待办失败:', e)
     }
   }
 }
 
-const removeTodo = (id) => {
-  todos.value = todos.value.filter(t => t.id !== id)
-  saveTodos()
-  showToast('🗑️', '已删除')
+const removeTodo = async (id) => {
+  try {
+    await todoApi.delete(id)
+    todos.value = todos.value.filter(t => t.id !== id)
+    showToast('🗑️', '已删除')
+  } catch (e) {
+    console.error('删除待办失败:', e)
+  }
 }
 
 // 连续打卡
 const checkinStreak = ref(0)
 onMounted(() => {
-  const savedStreak = localStorage.getItem('fmhome_checkin_streak')
   if (savedStreak) {
     checkinStreak.value = parseInt(savedStreak)
   }
 
   // 检查上次打卡日期
-  const lastCheckin = localStorage.getItem('fmhome_last_checkin')
   if (lastCheckin) {
     const lastDate = new Date(lastCheckin)
     const today = new Date()
@@ -555,7 +574,6 @@ onMounted(() => {
   }
 
   // 恢复待办
-  const savedTodos = localStorage.getItem('fmhome_todos')
   if (savedTodos) {
     const allTodos = JSON.parse(savedTodos)
     // 只保留今天的待办
@@ -564,14 +582,12 @@ onMounted(() => {
   }
 })
 
-const doCheckin = () => {
+const doCheckin = async () => {
   const today = new Date().toDateString()
-  const lastCheckin = localStorage.getItem('fmhome_last_checkin')
 
   if (lastCheckin !== today) {
     checkinStreak.value++
-    localStorage.setItem('fmhome_last_checkin', today)
-    localStorage.setItem('fmhome_checkin_streak', checkinStreak.value)
+    try { await checkinApi.checkin(); } catch(e) { }
     showToast('🎊', `连续打卡 ${checkinStreak.value} 天！`)
 
     // 解锁成就
