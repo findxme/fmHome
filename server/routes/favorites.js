@@ -1,5 +1,5 @@
 import express from 'express';
-import { getDatabase } from '../database.js';
+import { getDatabase } from '../mysqlDatabase.js';
 
 const router = express.Router();
 

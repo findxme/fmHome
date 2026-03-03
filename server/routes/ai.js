@@ -1,5 +1,5 @@
 import express from 'express';
-import { getDatabase } from '../database.js';
+import { getDatabase } from '../mysqlDatabase.js';
 import Anthropic from '@anthropic-ai/sdk';
 
 const router = express.Router();
@@ -364,4 +364,5 @@ async function generateDefaultPlan(days) {
   return plan;
 }
 
+export { getAIResponse };
 export default router;

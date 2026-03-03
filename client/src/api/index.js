@@ -94,7 +94,24 @@ export const familyApi = {
   join: (inviteCode, memberName) => api.post('/family/join', { invite_code: inviteCode, member_name: memberName }),
   update: (name) => api.put('/family', { name }),
   refreshCode: () => api.post('/family/refresh-code'),
-  removeMember: (id) => api.delete(`/family/members/${id}`)
+  removeMember: (id) => api.delete(`/family/members/${id}`),
+  addMember: (data) => api.post('/family/members', data)
+}
+
+// 购物车API
+export const cartApi = {
+  getAll: () => api.get('/cart'),
+  add: (data) => api.post('/cart', data),
+  update: (id, data) => api.put(`/cart/${id}`, data),
+  remove: (id) => api.delete(`/cart/${id}`),
+  clear: () => api.delete('/cart')
+}
+
+// 打卡API
+export const checkinApi = {
+  get: () => api.get('/checkin'),
+  checkin: (date) => api.post('/checkin', { date }),
+  remove: (date) => api.delete(`/checkin/${date}`)
 }
 
 // 购物车API
