@@ -179,6 +179,10 @@ const showHistory = ref(false)
 const showSaveTemplate = ref(false)
 const newTemplateName = ref('')
 
+// 本地存储变量
+const savedList = ref(localStorage.getItem('shopping_list') || null)
+const saved = ref(localStorage.getItem('shopping_templates') || null)
+
 const tabs = [
   { id: 'current', name: '当前清单', icon: '🛒' },
   { id: 'template', name: '模板', icon: '📋' },
@@ -225,7 +229,14 @@ const loadShoppingList = async () => {
   } catch (e) {
         // 错误处理
   }
-  // 降级到购物车数据
+  // 降级到本地存储
+  if (savedList.value) {
+    const parsed = JSON.parse(savedList.value)
+    if (parsed.length > 0) {
+      shoppingListItems.value = parsed
+      return
+    }
+  }
   if (store.cart.length > 0) {
     shoppingListItems.value = store.cart
   }
@@ -278,7 +289,7 @@ const useTemplate = (template) => {
   activeTab.value = 'current'
 }
 
-const saveAsTemplate = async () => {
+const saveAsTemplate = () => {
   if (!newTemplateName.value.trim() || shoppingListItems.value.length === 0) return
 
   const newTemplate = {
@@ -288,11 +299,8 @@ const saveAsTemplate = async () => {
     items: shoppingListItems.value.map(i => i.name)
   }
 
-  try {
-    await templateApi.save(newTemplate.name, newTemplate.items)
-  } catch (e) {
-    // 保存失败
-  }
+  const existing = saved.value ? JSON.parse(saved.value) : []
+  existing.push(newTemplate)
 
   templates.value.push(newTemplate)
   newTemplateName.value = ''
