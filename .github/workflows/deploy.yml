@@ -38,6 +38,7 @@ jobs:
             client/dist/ \
             package.json \
             .env.example
+          ls -lh deploy.tar.gz
 
       # 5. 传输到服务器
       - name: Copy to server
