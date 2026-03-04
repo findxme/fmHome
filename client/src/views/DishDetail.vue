@@ -411,7 +411,7 @@ const seasoningIngredients = computed(() => {
 })
 
 const inCart = computed(() => {
-  return dishStore.cart.some(item => item.id === dish.value?.id)
+  return dishStore.cart.some(item => item.dish_id === dish.value?.id || item.id === dish.value?.id)
 })
 
 const cartCount = computed(() => {

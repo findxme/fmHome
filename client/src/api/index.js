@@ -103,8 +103,8 @@ export const cartApi = {
   getAll: () => api.get('/cart'),
   add: (data) => api.post('/cart', data),
   update: (id, data) => api.put(`/cart/${id}`, data),
-  remove: (id) => api.delete(`/cart/${id}`),
-  clear: () => api.delete('/cart')
+  remove: (id) => api.delete(`/cart/item/${id}`),
+  clear: () => api.delete('/cart/clear')
 }
 
 // 打卡API

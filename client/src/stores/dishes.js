@@ -616,7 +616,7 @@ export const useDishStore = defineStore('dishes', () => {
   // 添加到购物车 - 保存到 MySQL
   const addToCart = async (dish) => {
     try {
-      await cartApi.add(dish.id, dish.name, 1)
+      await cartApi.add({ dish_id: dish.id, dish_name: dish.name, quantity: 1 })
       // 重新加载购物车
       await loadCart()
     } catch (e) {
@@ -642,7 +642,7 @@ export const useDishStore = defineStore('dishes', () => {
       if (quantity <= 0) {
         await removeFromCart(dishId)
       } else {
-        await cartApi.update(dishId, quantity)
+        await cartApi.update(dishId, { quantity })
         // 重新加载购物车
         await loadCart()
       }

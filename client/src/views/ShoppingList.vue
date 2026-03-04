@@ -225,14 +225,7 @@ const loadShoppingList = async () => {
   } catch (e) {
         // 错误处理
   }
-  // 降级到本地存储
-  if (savedList) {
-    const parsed = JSON.parse(savedList)
-    if (parsed.length > 0) {
-      shoppingListItems.value = parsed
-      return
-    }
-  }
+  // 降级到购物车数据
   if (store.cart.length > 0) {
     shoppingListItems.value = store.cart
   }
@@ -285,7 +278,7 @@ const useTemplate = (template) => {
   activeTab.value = 'current'
 }
 
-const saveAsTemplate = () => {
+const saveAsTemplate = async () => {
   if (!newTemplateName.value.trim() || shoppingListItems.value.length === 0) return
 
   const newTemplate = {
@@ -295,8 +288,11 @@ const saveAsTemplate = () => {
     items: shoppingListItems.value.map(i => i.name)
   }
 
-  const existing = saved ? JSON.parse(saved) : []
-  existing.push(newTemplate)
+  try {
+    await templateApi.save(newTemplate.name, newTemplate.items)
+  } catch (e) {
+    // 保存失败
+  }
 
   templates.value.push(newTemplate)
   newTemplateName.value = ''

@@ -148,9 +148,6 @@ onMounted(async () => {
     }
   } catch (e) {
         // 错误处理
-    if (savedFavorites) {
-      favorites.value = JSON.parse(savedFavorites)
-    }
   }
 
   // 加载历史 - 从API获取
@@ -161,13 +158,11 @@ onMounted(async () => {
     }
   } catch (e) {
         // 错误处理
-    if (savedHistory) {
-      history.value = JSON.parse(savedHistory).slice(0, 10)
-    }
   }
 
   // 加载主题
-  isDark.value = savedTheme === 'dark'
+  const savedTheme = localStorage.getItem('theme-dark')
+  isDark.value = savedTheme === 'true'
 })
 
 // 切换主题

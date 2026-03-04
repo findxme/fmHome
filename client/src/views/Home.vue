@@ -236,14 +236,7 @@ const selectedScenes = ref([])
 
 // 从 localStorage 恢复保存的场景选择
 onMounted(() => {
-  const savedScenes = localStorage.getItem('home-selected-scenes')
-  if (savedScenes) {
-    try {
-      selectedScenes.value = JSON.parse(savedScenes)
-    } catch (e) {
-      selectedScenes.value = []
-    }
-  }
+  selectedScenes.value = []
 })
 
 // 兼容旧的 single 选择器
@@ -255,7 +248,6 @@ const selectedScene = computed({
     } else {
       selectedScenes.value = [val]
     }
-    localStorage.setItem('home-selected-scenes', JSON.stringify(selectedScenes.value))
   }
 })
 
@@ -271,8 +263,6 @@ const selectScene = (id) => {
       selectedScenes.value.push(id)
     }
   }
-  // 保存到 localStorage
-  localStorage.setItem('home-selected-scenes', JSON.stringify(selectedScenes.value))
   // 收起搜索框
   showSearch.value = false
 }

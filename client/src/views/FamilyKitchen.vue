@@ -410,10 +410,15 @@ const colors = ['#a7f3d0', '#bfdbfe', '#fecaca', '#bef264', '#fed7aa', '#ddd6fe'
 // 家庭成员
 const familyMembers = ref([])
 
-// 从本地存储恢复
-onMounted(() => {
-  if (saved) {
-    familyMembers.value = JSON.parse(saved)
+// 从API恢复家庭成员
+onMounted(async () => {
+  try {
+    const res = await familyApi.get()
+    if (res.data?.data?.members) {
+      familyMembers.value = res.data.data.members
+    }
+  } catch (e) {
+    // 加载失败
   }
 })
 
@@ -558,34 +563,23 @@ const removeTodo = async (id) => {
 
 // 连续打卡
 const checkinStreak = ref(0)
-onMounted(() => {
-  if (savedStreak) {
-    checkinStreak.value = parseInt(savedStreak)
-  }
-
-  // 检查上次打卡日期
-  if (lastCheckin) {
-    const lastDate = new Date(lastCheckin)
-    const today = new Date()
-    const diffDays = Math.floor((today - lastDate) / (1000 * 60 * 60 * 24))
-    if (diffDays > 1) {
-      checkinStreak.value = 0 // 中断
+const lastCheckinDate = ref('')
+onMounted(async () => {
+  try {
+    const res = await checkinApi.get()
+    if (res.data?.data) {
+      checkinStreak.value = res.data.data.streak || 0
+      lastCheckinDate.value = res.data.data.last_date || ''
     }
-  }
-
-  // 恢复待办
-  if (savedTodos) {
-    const allTodos = JSON.parse(savedTodos)
-    // 只保留今天的待办
-    const today = new Date().toDateString()
-    todos.value = allTodos.filter(t => new Date(t.createdAt).toDateString() === today)
+  } catch (e) {
+    // 加载打卡数据失败
   }
 })
 
 const doCheckin = async () => {
   const today = new Date().toDateString()
 
-  if (lastCheckin !== today) {
+  if (lastCheckinDate.value !== today) {
     checkinStreak.value++
     try { await checkinApi.checkin(); } catch(e) { }
     showToast('🎊', `连续打卡 ${checkinStreak.value} 天！`)
