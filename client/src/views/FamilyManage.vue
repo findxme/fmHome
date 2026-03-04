@@ -93,7 +93,15 @@
 
       <!-- 家庭成员 -->
       <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm mb-4">
-        <h3 class="font-semibold text-gray-800 dark:text-white mb-4">👥 家庭成员</h3>
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold text-gray-800 dark:text-white">👥 家庭成员</h3>
+          <button
+            @click="showAddMemberModal = true"
+            class="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-sm"
+          >
+            + 添加成员
+          </button>
+        </div>
         <div class="space-y-3">
           <div
             v-for="member in family.members"
@@ -109,6 +117,28 @@
                 <p class="text-xs text-gray-500">{{ member.role === 'admin' ? '管理员' : '成员' }}</p>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 添加成员弹窗 -->
+      <div v-if="showAddMemberModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" @click.self="showAddMemberModal = false">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-sm">
+          <h3 class="font-bold text-lg text-gray-800 dark:text-white mb-4">添加家庭成员</h3>
+          <input
+            v-model="newMemberName"
+            type="text"
+            placeholder="输入成员昵称"
+            class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white mb-4"
+            @keyup.enter="addMember"
+          />
+          <div class="flex gap-3">
+            <button @click="showAddMemberModal = false" class="flex-1 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white rounded-xl">
+              取消
+            </button>
+            <button @click="addMember" :disabled="!newMemberName.trim() || isAddingMember" class="flex-1 py-3 bg-blue-500 text-white rounded-xl font-medium disabled:opacity-50">
+              {{ isAddingMember ? '添加中...' : '添加' }}
+            </button>
           </div>
         </div>
       </div>
@@ -146,6 +176,11 @@ const joinCode = ref('')
 const memberName = ref('')
 const isCreating = ref(false)
 const isJoining = ref(false)
+
+// 添加成员相关
+const showAddMemberModal = ref(false)
+const newMemberName = ref('')
+const isAddingMember = ref(false)
 
 onMounted(async () => {
   await loadFamily()
@@ -216,5 +251,25 @@ const copyCode = () => {
     navigator.clipboard.writeText(family.value.invite_code)
     alert('邀请码已复制到剪贴板')
   }
+}
+
+const addMember = async () => {
+  if (!newMemberName.value.trim()) return
+
+  isAddingMember.value = true
+  try {
+    const res = await familyApi.addMember({ member_name: newMemberName.value })
+    if (res.data.success) {
+      family.value.members = res.data.members
+      newMemberName.value = ''
+      showAddMemberModal.value = false
+    } else {
+      alert(res.data.error || '添加失败')
+    }
+  } catch (e) {
+        // 错误处理
+    alert('添加失败，请重试')
+  }
+  isAddingMember.value = false
 }
 </script>

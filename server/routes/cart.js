@@ -7,7 +7,12 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   const db = getDatabase();
   try {
-    const cart = await db.prepare('SELECT * FROM carts ORDER BY added_at DESC').all();
+    const cart = await db.prepare(`
+      SELECT c.*, d.name, d.category, d.tags, d.image_url, d.difficulty, d.cooking_time, d.servings, d.description, d.ingredients, d.steps, d.tips
+      FROM carts c
+      LEFT JOIN dishes d ON c.dish_id = d.id
+      ORDER BY c.added_at DESC
+    `).all();
     res.json({ success: true, data: cart });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -35,15 +40,15 @@ router.post('/', async (req, res) => {
 });
 
 // 更新数量
-router.put('/:dishId', async (req, res) => {
+router.put('/:dish_id', async (req, res) => {
   const db = getDatabase();
-  const { dishId } = req.params;
+  const { dish_id } = req.params;
   const { quantity } = req.body;
   try {
     if (quantity <= 0) {
-      await db.prepare('DELETE FROM carts WHERE dish_id = ?').run(dishId);
+      await db.prepare('DELETE FROM carts WHERE dish_id = ?').run(dish_id);
     } else {
-      await db.prepare('UPDATE carts SET quantity = ? WHERE dish_id = ?').run(quantity, dishId);
+      await db.prepare('UPDATE carts SET quantity = ? WHERE dish_id = ?').run(quantity, dish_id);
     }
     res.json({ success: true });
   } catch (error) {
@@ -51,12 +56,12 @@ router.put('/:dishId', async (req, res) => {
   }
 });
 
-// 删除单个物品
-router.delete('/item/:dishId', async (req, res) => {
+// 删除单个物品 (支持 /cart/:dish_id 和 /cart/item/:dish_id)
+router.delete(['/:dish_id', '/item/:dish_id'], async (req, res) => {
   const db = getDatabase();
-  const { dishId } = req.params;
+  const { dish_id } = req.params;
   try {
-    await db.prepare('DELETE FROM carts WHERE dish_id = ?').run(dishId);
+    await db.prepare('DELETE FROM carts WHERE dish_id = ?').run(dish_id);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
