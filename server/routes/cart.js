@@ -1,9 +1,28 @@
+/**
+ * 购物车管理路由
+ * 
+ * 功能说明：
+ * - 获取购物车中的所有菜品
+ * - 添加菜品到购物车（支持数量累加）
+ * - 更新购物车中菜品的数量
+ * - 删除购物车中的单个菜品
+ * - 清空整个购物车
+ * 
+ * 数据表：carts（关联 dishes 表获取菜品详情）
+ */
+
 import express from 'express';
 import { getDatabase } from '../database.js';
 
 const router = express.Router();
 
-// 获取购物车
+/**
+ * 获取购物车列表
+ * 
+ * 请求方式：GET /api/cart
+ * 返回：购物车中所有菜品及其详情（包括食材、步骤等）
+ * 关联查询：从 dishes 表联查获取完整菜品信息
+ */
 router.get('/', async (req, res) => {
   const db = getDatabase();
   try {
@@ -19,7 +38,15 @@ router.get('/', async (req, res) => {
   }
 });
 
-// 添加到购物车
+/**
+ * 添加菜品到购物车
+ * 
+ * 请求方式：POST /api/cart
+ * 请求体：{ dish_id, dish_name, quantity }
+ * 逻辑：
+ *   - 如果菜品已存在，数量累加
+ *   - 如果是新菜品，插入新记录
+ */
 router.post('/', async (req, res) => {
   const db = getDatabase();
   const { dish_id, dish_name, quantity = 1 } = req.body;
@@ -39,7 +66,16 @@ router.post('/', async (req, res) => {
   }
 });
 
-// 更新数量
+/**
+ * 更新购物车中菜品的数量
+ * 
+ * 请求方式：PUT /api/cart/:dish_id
+ * 路径参数：dish_id - 菜品ID
+ * 请求体：{ quantity }
+ * 逻辑：
+ *   - quantity <= 0 时删除该记录
+ *   - quantity > 0 时更新数量
+ */
 router.put('/:dish_id', async (req, res) => {
   const db = getDatabase();
   const { dish_id } = req.params;
@@ -56,7 +92,13 @@ router.put('/:dish_id', async (req, res) => {
   }
 });
 
-// 删除单个物品 (支持 /cart/:dish_id 和 /cart/item/:dish_id)
+/**
+ * 删除购物车中的单个菜品
+ * 
+ * 请求方式：DELETE /api/cart/:dish_id 或 /api/cart/item/:dish_id
+ * 路径参数：dish_id - 菜品ID
+ * 返回：成功返回 true
+ */
 router.delete(['/:dish_id', '/item/:dish_id'], async (req, res) => {
   const db = getDatabase();
   const { dish_id } = req.params;
@@ -68,7 +110,12 @@ router.delete(['/:dish_id', '/item/:dish_id'], async (req, res) => {
   }
 });
 
-// 清空购物车
+/**
+ * 清空购物车
+ * 
+ * 请求方式：DELETE /api/cart/clear
+ * 返回：成功返回 true
+ */
 router.delete('/clear', async (req, res) => {
   const db = getDatabase();
   try {

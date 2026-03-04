@@ -1,3 +1,4 @@
+// GitHub Issue #18 测试备注：少行 agent 参与测试 - AI 是智能助手，帮助处理各种任务
 // GitHub Issue #16 测试备注：多 agent 协作验证
 // 少行 祝大家工作顺利，代码无 bug！🚀
 

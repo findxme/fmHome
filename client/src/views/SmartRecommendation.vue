@@ -106,20 +106,41 @@
 </template>
 
 <script setup>
+/**
+ * SmartRecommendation.vue - AI 智能推荐页面
+ * 
+ * 功能说明：
+ * 1. 心情推荐：根据用户当前心情推荐合适的菜品
+ * 2. 随机选菜：纠结时使用随机推荐功能
+ * 3. 季节推荐：根据当前季节推荐应季菜品
+ * 
+ * 依赖：
+ * - aiApi: AI 推荐接口
+ * - vue-router: 路由跳转
+ */
+
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { aiApi } from '@/api'
 
 const router = useRouter()
 
+// 心情选项列表
 const moodOptions = ref([])
+// 当前选中的心情
 const selectedMood = ref(null)
+// 推荐菜品列表
 const recommendations = ref([])
+// 推荐理由
 const reason = ref('')
+// 随机推荐加载状态
 const isRolling = ref(false)
+// 随机推荐结果
 const randomResult = ref(null)
+// 季节推荐数据
 const seasonal = ref(null)
 
+// 页面加载时获取心情选项和季节推荐
 onMounted(async () => {
   // 获取心情选项
   try {
@@ -142,6 +163,10 @@ onMounted(async () => {
   }
 })
 
+/**
+ * 选择心情并获取推荐
+ * @param {Object} mood - 心情对象，包含 id, name, icon 等属性
+ */
 const selectMood = async (mood) => {
   selectedMood.value = mood
 
@@ -156,6 +181,10 @@ const selectMood = async (mood) => {
   }
 }
 
+/**
+ * 随机选菜功能
+ * 用于帮助用户解决"今天吃什么"的难题
+ */
 const rollDice = async () => {
   isRolling.value = true
 
@@ -171,6 +200,10 @@ const rollDice = async () => {
   isRolling.value = false
 }
 
+/**
+ * 跳转到菜品详情页
+ * @param {string|number} id - 菜品ID
+ */
 const goToDish = (id) => {
   if (id) {
     router.push(`/dish/${id}`)

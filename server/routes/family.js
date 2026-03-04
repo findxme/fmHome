@@ -1,10 +1,43 @@
+/**
+ * 家庭管理路由
+ * 
+ * 功能说明：
+ * - 创建家庭（每个用户只能创建一个家庭）
+ * - 通过邀请码加入已有家庭
+ * - 获取当前家庭信息及成员列表
+ * - 更新家庭名称
+ * - 刷新邀请码（邀请码7天后过期）
+ * - 家庭成员管理（添加、删除成员）
+ * 
+ * 数据表：
+ *   - families：家庭基本信息
+ *   - family_members：家庭成员列表
+ * 
+ * 邀请码机制：
+ *   - 6位随机字母数字组合
+ *   - 有效期7天
+ *   - 可手动刷新重置
+ */
+
 import express from 'express';
 import { getDatabase } from '../database.js';
 import { randomUUID } from 'crypto';
 
 const router = express.Router();
 
-// 创建家庭
+/**
+ * 创建新家庭
+ * 
+ * 请求方式：POST /api/family/create
+ * 请求体：{ name } - 家庭名称
+ * 限制：每个用户只能创建一个家庭
+ * 返回：家庭信息及初始成员列表
+ * 
+ * 自动操作：
+ *   - 生成唯一家庭ID
+ *   - 生成6位邀请码（有效期7天）
+ *   - 将创建者添加为管理员（role: admin）
+ */
 router.post('/create', async (req, res) => {
   const db = getDatabase();
   const { name } = req.body;
@@ -40,7 +73,16 @@ router.post('/create', async (req, res) => {
   }
 });
 
-// 加入家庭
+/**
+ * 加入已有家庭
+ * 
+ * 请求方式：POST /api/family/join
+ * 请求体：{ invite_code, member_name }
+ * 验证：
+ *   - 邀请码必须有效且未过期
+ *   - 成员不能已是家庭成员
+ * 返回：家庭信息及更新后的成员列表
+ */
 router.post('/join', async (req, res) => {
   const db = getDatabase();
   const { invite_code, member_name } = req.body;
@@ -78,7 +120,13 @@ router.post('/join', async (req, res) => {
   }
 });
 
-// 获取家庭信息
+/**
+ * 获取当前家庭信息
+ * 
+ * 请求方式：GET /api/family
+ * 返回：家庭信息及所有成员列表
+ * 注意：只返回一个家庭（系统设计为单家庭模式）
+ */
 router.get('/', async (req, res) => {
   const db = getDatabase();
   try {
@@ -93,7 +141,13 @@ router.get('/', async (req, res) => {
   }
 });
 
-// 更新家庭信息
+/**
+ * 更新家庭名称
+ * 
+ * 请求方式：PUT /api/family
+ * 请求体：{ name } - 新的家庭名称
+ * 权限：家庭创建者或管理员
+ */
 router.put('/', async (req, res) => {
   const db = getDatabase();
   const { name } = req.body;
@@ -105,7 +159,13 @@ router.put('/', async (req, res) => {
   }
 });
 
-// 刷新邀请码
+/**
+ * 刷新邀请码
+ * 
+ * 请求方式：POST /api/family/refresh-code
+ * 用途：生成新的邀请码，重置7天有效期
+ * 返回：新的邀请码
+ */
 router.post('/refresh-code', async (req, res) => {
   const db = getDatabase();
   try {
@@ -121,7 +181,12 @@ router.post('/refresh-code', async (req, res) => {
   }
 });
 
-// 移除家庭成员
+/**
+ * 移除家庭成员（废弃接口，保留兼容）
+ * 
+ * 请求方式：DELETE /api/family
+ * 注意：请使用 DELETE /api/family/members/:id
+ */
 router.delete('/', async (req, res) => {
   const db = getDatabase();
   const { id } = req.params;
@@ -133,7 +198,14 @@ router.delete('/', async (req, res) => {
   }
 });
 
-// 添加家庭成员
+/**
+ * 添加家庭成员
+ * 
+ * 请求方式：POST /api/family/members
+ * 请求体：{ member_name, title, avatar, color }
+ * 限制：成员不能已存在于家庭中
+ * 默认角色：member（普通成员）
+ */
 router.post('/members', async (req, res) => {
   const db = getDatabase();
   const { member_name, title, avatar, color } = req.body;
@@ -166,7 +238,14 @@ router.post('/members', async (req, res) => {
   }
 });
 
-// 删除家庭成员
+/**
+ * 删除家庭成员
+ * 
+ * 请求方式：DELETE /api/family/members/:id
+ * 路径参数：id - 成员ID
+ * 限制：不能删除管理员角色（role: admin）的成员
+ * 返回：成功返回 true
+ */
 router.delete('/members/:id', async (req, res) => {
   const db = getDatabase();
   const { id } = req.params;
