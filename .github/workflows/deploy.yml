@@ -26,8 +26,8 @@ jobs:
             DEPLOY_PATH="${{ secrets.DEPLOY_PATH || '/root' }}"
 
             # 清除旧的 Git 代理配置
-            git config --global --unset http.proxy
-            git config --global --unset https.proxy
+            git config --global --unset http.proxy || true
+            git config --global --unset https.proxy || true
 
             # 拉取最新代码
             mkdir -p ${DEPLOY_PATH}
