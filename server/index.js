@@ -1,3 +1,6 @@
+// GitHub Issue #16 测试备注：多 agent 协作验证
+// 少行 祝大家工作顺利，代码无 bug！🚀
+
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
