@@ -23,7 +23,7 @@ jobs:
           command_timeout: 30m
           script: |
             set -e
-            DEPLOY_PATH="${{ secrets.DEPLOY_PATH || '/opt/fmhome' }}"
+            DEPLOY_PATH="${{ secrets.DEPLOY_PATH || '/root' }}"
 
             # 清除旧的 Git 代理配置
             git config --global --unset http.proxy
