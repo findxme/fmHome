@@ -97,7 +97,7 @@
           @click="selectScene(scene.id)"
           :class="[
             'flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-95',
-            selectedScene === scene.id
+            selectedScenes.includes(scene.id)
               ? 'bg-accent-500 text-white shadow-lg shadow-accent-500/30'
               : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow-sm hover:shadow-md'
           ]"
@@ -231,20 +231,64 @@ const scenes = [
   { id: '甜品', name: '甜品', icon: '🍰' },
 ]
 
-const selectedScene = ref('all')
+// 支持多选
+const selectedScenes = ref([])
+
+// 从 localStorage 恢复保存的场景选择
+onMounted(() => {
+  const savedScenes = localStorage.getItem('home-selected-scenes')
+  if (savedScenes) {
+    try {
+      selectedScenes.value = JSON.parse(savedScenes)
+    } catch (e) {
+      selectedScenes.value = []
+    }
+  }
+})
+
+// 兼容旧的 single 选择器
+const selectedScene = computed({
+  get: () => selectedScenes.value.length > 0 ? selectedScenes.value[0] : 'all',
+  set: (val) => {
+    if (val === 'all') {
+      selectedScenes.value = []
+    } else {
+      selectedScenes.value = [val]
+    }
+    localStorage.setItem('home-selected-scenes', JSON.stringify(selectedScenes.value))
+  }
+})
 
 const selectScene = (id) => {
-  selectedScene.value = selectedScene.value === id ? 'all' : id
+  if (id === 'all') {
+    selectedScenes.value = []
+  } else {
+    // 多选逻辑：点击已选中则取消，否则添加
+    const index = selectedScenes.value.indexOf(id)
+    if (index > -1) {
+      selectedScenes.value.splice(index, 1)
+    } else {
+      selectedScenes.value.push(id)
+    }
+  }
+  // 保存到 localStorage
+  localStorage.setItem('home-selected-scenes', JSON.stringify(selectedScenes.value))
   // 收起搜索框
   showSearch.value = false
 }
 
 const sceneLabel = computed(() => {
-  const scene = scenes.find(s => s.id === selectedScene.value)
-  return scene ? scene.name : '全部菜品'
+  if (selectedScenes.value.length === 0) {
+    return '全部菜品'
+  }
+  const selectedNames = scenes
+    .filter(s => selectedScenes.value.includes(s.id))
+    .map(s => s.name)
+    .join(' + ')
+  return selectedNames
 })
 
-// 筛选逻辑
+// 筛选逻辑 - 支持多条件组合筛选
 const filteredDishes = computed(() => {
   let dishes = dishStore.dishes || []
 
@@ -257,9 +301,9 @@ const filteredDishes = computed(() => {
     )
   }
 
-  // 分类过滤
-  if (selectedScene.value !== 'all') {
-    dishes = dishes.filter(d => d.category === selectedScene.value)
+  // 多条件组合筛选（分类）
+  if (selectedScenes.value.length > 0) {
+    dishes = dishes.filter(d => selectedScenes.value.includes(d.category))
   }
 
   return dishes
