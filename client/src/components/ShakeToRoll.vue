@@ -90,7 +90,7 @@ const requestPermission = async () => {
       const permission = await DeviceMotionEvent.requestPermission()
       return permission === 'granted'
     } catch (e) {
-      console.log('请求设备运动权限失败:', e)
+          // 请求设备运动权限失败
       return false
     }
   }

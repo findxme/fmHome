@@ -498,7 +498,7 @@ onMounted(async () => {
       }))
     }
   } catch (e) {
-    console.error('加载待办失败:', e)
+        // 错误处理
   }
 })
 
@@ -522,7 +522,7 @@ const addTodo = async () => {
         })
       }
     } catch (e) {
-      console.error('添加待办失败:', e)
+          // 错误处理
     }
     newTodo.text = ''
     newTodo.cooker = null
@@ -541,7 +541,7 @@ const toggleTodo = async (id) => {
         showToast('🎉', '完成一项！')
       }
     } catch (e) {
-      console.error('更新待办失败:', e)
+          // 错误处理
     }
   }
 }
@@ -552,7 +552,7 @@ const removeTodo = async (id) => {
     todos.value = todos.value.filter(t => t.id !== id)
     showToast('🗑️', '已删除')
   } catch (e) {
-    console.error('删除待办失败:', e)
+        // 错误处理
   }
 }
 

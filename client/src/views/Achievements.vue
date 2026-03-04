@@ -159,7 +159,7 @@ const loadAchievements = async () => {
       userLevel.value = res.data.data.level
     }
   } catch (e) {
-    console.error('加载成就失败:', e)
+        // 错误处理
   }
 }
 
@@ -179,7 +179,7 @@ const checkAchievements = async () => {
     // 重新加载成就
     await loadAchievements()
   } catch (e) {
-    console.error('检查成就失败:', e)
+        // 错误处理
   }
 
   isChecking.value = false

@@ -26,7 +26,7 @@ export const useDishStore = defineStore('dishes', () => {
         await loadSampleDishesToDatabase()
       }
     } catch (e) {
-      console.error('加载菜品失败:', e)
+      // 加载菜品失败
       dishes.value = []
     } finally {
       loading.value = false
@@ -43,7 +43,7 @@ export const useDishStore = defineStore('dishes', () => {
           ...dish
         })
       } catch (e) {
-        console.log('菜品已存在:', dish.name)
+        // 菜品已存在
       }
     }
     // 重新加载
@@ -557,7 +557,7 @@ export const useDishStore = defineStore('dishes', () => {
       const res = await dishApi.getDailyRecommend()
       dailyRecommend.value = res.data.data || []
     } catch (e) {
-      console.error('加载推荐失败:', e)
+          // 加载推荐失败
       dailyRecommend.value = []
     }
   }
@@ -574,7 +574,7 @@ export const useDishStore = defineStore('dishes', () => {
       dishes.value.unshift(newDish)
       return newDish
     } catch (e) {
-      console.error('添加菜品失败:', e)
+          // 添加菜品失败
       throw e
     }
   }
@@ -585,7 +585,7 @@ export const useDishStore = defineStore('dishes', () => {
       await dishApi.delete(dishId)
       dishes.value = dishes.value.filter(d => d.id !== dishId)
     } catch (e) {
-      console.error('删除菜品失败:', e)
+          // 删除菜品失败
       throw e
     }
   }
@@ -599,7 +599,7 @@ export const useDishStore = defineStore('dishes', () => {
         dishes.value[index] = { ...dishes.value[index], ...updatedData }
       }
     } catch (e) {
-      console.error('更新菜品失败:', e)
+          // 更新菜品失败
       throw e
     }
   }
@@ -610,7 +610,7 @@ export const useDishStore = defineStore('dishes', () => {
       const res = await cartApi.getAll()
       cart.value = res.data.data || []
     } catch (e) {
-      console.error('加载购物车失败:', e)
+          // 加载购物车失败
       cart.value = []
     }
   }
@@ -622,7 +622,7 @@ export const useDishStore = defineStore('dishes', () => {
       // 重新加载购物车
       await loadCart()
     } catch (e) {
-      console.error('添加到购物车失败:', e)
+          // 添加到购物车失败
       throw e
     }
   }
@@ -633,7 +633,7 @@ export const useDishStore = defineStore('dishes', () => {
       await cartApi.remove(dishId)
       cart.value = cart.value.filter(item => item.dish_id !== dishId)
     } catch (e) {
-      console.error('移除购物车失败:', e)
+          // 移除购物车失败
       throw e
     }
   }
@@ -649,7 +649,7 @@ export const useDishStore = defineStore('dishes', () => {
         await loadCart()
       }
     } catch (e) {
-      console.error('更新数量失败:', e)
+          // 更新数量失败
       throw e
     }
   }
@@ -660,7 +660,7 @@ export const useDishStore = defineStore('dishes', () => {
       await cartApi.clear()
       cart.value = []
     } catch (e) {
-      console.error('清空购物车失败:', e)
+          // 清空购物车失败
       throw e
     }
   }
@@ -676,7 +676,7 @@ export const useDishStore = defineStore('dishes', () => {
         }
       }
     } catch (e) {
-      console.error('加载偏好失败:', e)
+          // 加载偏好失败
     }
   }
 
@@ -689,7 +689,7 @@ export const useDishStore = defineStore('dishes', () => {
       })
       preferences.value = newPrefs
     } catch (e) {
-      console.error('保存偏好失败:', e)
+          // 保存偏好失败
       throw e
     }
   }

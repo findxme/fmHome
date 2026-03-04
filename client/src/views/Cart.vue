@@ -106,7 +106,7 @@ const generateList = async () => {
     await shoppingApi.save({ items: listData })
     router.push('/shopping-list')
   } catch (e) {
-    console.error('保存购物清单失败:', e)
+        // 错误处理
     router.push('/shopping-list')
   }
 }

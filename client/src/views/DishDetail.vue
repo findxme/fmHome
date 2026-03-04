@@ -497,7 +497,7 @@ const loadDish = async () => {
         initIngredients()
       }
     } catch (e) {
-      console.error('加载菜品失败:', e)
+          // 错误处理
     }
   }
 

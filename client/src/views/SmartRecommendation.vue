@@ -128,7 +128,7 @@ onMounted(async () => {
       moodOptions.value = res.data.data
     }
   } catch (e) {
-    console.error('获取心情选项失败:', e)
+        // 错误处理
   }
 
   // 获取季节推荐
@@ -138,7 +138,7 @@ onMounted(async () => {
       seasonal.value = res.data.data
     }
   } catch (e) {
-    console.error('获取季节推荐失败:', e)
+        // 错误处理
   }
 })
 
@@ -152,7 +152,7 @@ const selectMood = async (mood) => {
       reason.value = res.data.data.reason
     }
   } catch (e) {
-    console.error('推荐失败:', e)
+        // 错误处理
   }
 }
 
@@ -165,7 +165,7 @@ const rollDice = async () => {
       randomResult.value = res.data.data
     }
   } catch (e) {
-    console.error('随机推荐失败:', e)
+        // 错误处理
   }
 
   isRolling.value = false

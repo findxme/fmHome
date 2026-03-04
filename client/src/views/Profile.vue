@@ -147,7 +147,7 @@ onMounted(async () => {
       favorites.value = favRes.data.data || []
     }
   } catch (e) {
-    console.error('加载收藏失败:', e)
+        // 错误处理
     if (savedFavorites) {
       favorites.value = JSON.parse(savedFavorites)
     }
@@ -160,7 +160,7 @@ onMounted(async () => {
       history.value = historyRes.data.data || []
     }
   } catch (e) {
-    console.error('加载历史失败:', e)
+        // 错误处理
     if (savedHistory) {
       history.value = JSON.parse(savedHistory).slice(0, 10)
     }
@@ -188,7 +188,7 @@ const clearHistory = async () => {
       await browseHistoryApi.clear()
       history.value = []
     } catch (e) {
-      console.error('清空历史失败:', e)
+          // 错误处理
       history.value = []
     }
   }

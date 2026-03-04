@@ -158,7 +158,7 @@ const loadFamily = async () => {
       family.value = res.data.data
     }
   } catch (e) {
-    console.error('加载家庭信息失败:', e)
+        // 错误处理
   }
 }
 
@@ -175,7 +175,7 @@ const createFamily = async () => {
       alert(res.data.error || '创建失败')
     }
   } catch (e) {
-    console.error('创建家庭失败:', e)
+        // 错误处理
     alert('创建失败，请重试')
   }
   isCreating.value = false
@@ -194,7 +194,7 @@ const joinFamily = async () => {
       alert(res.data.error || '加入失败')
     }
   } catch (e) {
-    console.error('加入家庭失败:', e)
+        // 错误处理
     alert('加入失败，请重试')
   }
   isJoining.value = false
@@ -207,7 +207,7 @@ const refreshCode = async () => {
       family.value.invite_code = res.data.invite_code
     }
   } catch (e) {
-    console.error('刷新邀请码失败:', e)
+        // 错误处理
   }
 }
 

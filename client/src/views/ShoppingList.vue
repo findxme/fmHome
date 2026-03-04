@@ -223,7 +223,7 @@ const loadShoppingList = async () => {
       }
     }
   } catch (e) {
-    console.error('加载购物清单失败:', e)
+        // 错误处理
   }
   // 降级到本地存储
   if (savedList) {
@@ -245,7 +245,7 @@ const loadTemplates = async () => {
       templates.value = [...templates.value, ...res.data.data]
     }
   } catch (e) {
-    console.error('加载模板失败:', e)
+        // 错误处理
   }
 }
 
@@ -259,7 +259,7 @@ const loadHistory = async () => {
       }))
     }
   } catch (e) {
-    console.error('加载历史失败:', e)
+        // 错误处理
   }
 
   // 计算常购食材
@@ -322,7 +322,7 @@ const handleUpdate = async (items) => {
       currentListId.value = res.data.data.id
     }
   } catch (e) {
-    console.error('保存购物清单失败:', e)
+        // 错误处理
   }
 
   // 保存到本地存储作为备份
@@ -337,7 +337,7 @@ const handleUpdate = async (items) => {
     try {
       await historyApi.save(historyItem.items)
     } catch (e) {
-      console.error('保存购买历史失败:', e)
+          // 错误处理
     }
   }
 }
@@ -347,7 +347,7 @@ const clearList = async () => {
   try {
     await shoppingApi.save({ id: currentListId.value, items: [] })
   } catch (e) {
-    console.error('清空购物清单失败:', e)
+        // 错误处理
   }
 }
 </script>

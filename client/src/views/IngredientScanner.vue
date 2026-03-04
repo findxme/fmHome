@@ -132,7 +132,7 @@ const getRecommendations = async () => {
       recommendations.value = res.data.data.recipes
     }
   } catch (e) {
-    console.error('获取推荐失败:', e)
+        // 错误处理
   }
   isLoading.value = false
 }

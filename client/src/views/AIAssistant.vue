@@ -289,7 +289,7 @@ const getRecommend = async () => {
     const res = await aiApi.recommend(recommendParams)
     recommendResult.value = res.data.data || []
   } catch (e) {
-    console.error('推荐失败:', e)
+        // 错误处理
   } finally {
     recommendLoading.value = false
   }
@@ -328,7 +328,7 @@ const generateDish = async () => {
           }
         }
       } catch (e) {
-        console.error('解析失败:', e)
+            // 错误处理
         // 解析失败，使用默认格式
         generatedDish.value = {
           name: 'AI创作菜品',
@@ -339,7 +339,7 @@ const generateDish = async () => {
       }
     }
   } catch (e) {
-    console.error('生成失败:', e)
+        // 错误处理
   } finally {
     generateLoading.value = false
   }
@@ -400,7 +400,7 @@ const askNutrition = async () => {
       nutritionAnswer.value = res.data.data
     }
   } catch (e) {
-    console.error('问答失败:', e)
+        // 错误处理
   } finally {
     nutritionLoading.value = false
   }
@@ -431,7 +431,7 @@ const calculateCalorie = async () => {
       }
     }
   } catch (e) {
-    console.error('计算失败:', e)
+        // 错误处理
   } finally {
     calorieLoading.value = false
   }
@@ -459,7 +459,7 @@ const askQuestion = async () => {
       chatAnswer.value = res.data.data
     }
   } catch (e) {
-    console.error('问答失败:', e)
+        // 错误处理
   } finally {
     chatLoading.value = false
   }

@@ -367,7 +367,7 @@ onMounted(() => {
       dish.ingredients = editData.ingredients || []
       dish.steps = editData.steps || []
     } catch (e) {
-      console.error('解析编辑数据失败:', e)
+          // 错误处理
     }
   }
 })
@@ -476,7 +476,7 @@ const saveDish = async () => {
       router.push('/')
     }, 1000)
   } catch (e) {
-    console.error('保存菜品失败:', e)
+        // 错误处理
     showToast('❌', '保存失败：' + e.message)
   }
 }
