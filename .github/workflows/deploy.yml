@@ -25,9 +25,10 @@ jobs:
             set -e
             DEPLOY_PATH="${{ secrets.DEPLOY_PATH || '/root' }}"
 
-            # 清除旧的 Git 代理配置
+            # 清除旧的 Git 代理和镜像配置
             git config --global --unset http.proxy || true
             git config --global --unset https.proxy || true
+            git config --global --unset-all url.https://ghproxy.com/https://github.com/.insteadof || true
 
             # 拉取最新代码
             mkdir -p ${DEPLOY_PATH}
@@ -39,9 +40,6 @@ jobs:
             else
               echo ">>> 更新代码..."
             fi
-
-            # 配置 GitHub 镜像加速
-            git config --global url."https://ghproxy.com/https://github.com/".insteadOf "https://github.com/"
 
             git fetch origin main
             git reset --hard origin/main
