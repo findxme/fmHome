@@ -59,11 +59,11 @@ jobs:
 
             # 停止旧容器
             echo ">>> 停止旧容器..."
-            docker-compose down || true
+            docker compose down || true
 
             # 本地构建镜像并启动
             echo ">>> 构建镜像并启动..."
-            docker-compose up --build -d
+            docker compose up --build -d
 
             # 清理旧镜像
             docker image prune -f
@@ -71,7 +71,7 @@ jobs:
             # 验证
             echo ">>> 等待服务启动..."
             sleep 15
-            docker-compose ps
+            docker compose ps
             curl -sf http://localhost:3001/api/health \
               && echo "✅ 部署成功！" \
-              || (echo "❌ 健康检查失败" && docker-compose logs --tail=50 && exit 1)
+              || (echo "❌ 健康检查失败" && docker compose logs --tail=50 && exit 1)
