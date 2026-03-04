@@ -26,8 +26,14 @@ const isDark = ref(false)
 const store = useDishStore()
 
 onMounted(() => {
-  // 跟随系统设置
-  isDark.value = window.matchMedia('(prefers-color-scheme: dark)').matches
+  // 优先从 localStorage 读取保存的主题设置
+  const savedTheme = localStorage.getItem('theme-dark')
+  if (savedTheme !== null) {
+    isDark.value = savedTheme === 'true'
+  } else {
+    // 如果没有保存，则跟随系统设置
+    isDark.value = window.matchMedia('(prefers-color-scheme: dark)').matches
+  }
   // 加载购物车
   store.loadCart()
 })
@@ -40,6 +46,8 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e)
 // 切换深色模式
 const toggleDark = () => {
   isDark.value = !isDark.value
+  // 保存到 localStorage
+  localStorage.setItem('theme-dark', isDark.value.toString())
 }
 
 // 暴露给子组件
