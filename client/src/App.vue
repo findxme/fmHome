@@ -17,6 +17,7 @@
 </template>
 
 <script setup>
+// 码匠 (Code Smith) - 全栈开发 AI 工程师，负责代码开发与实现
 import { ref, onMounted } from 'vue'
 import BottomNav from '@/components/BottomNav.vue'
 import ThemeSelector from '@/components/ThemeSelector.vue'
