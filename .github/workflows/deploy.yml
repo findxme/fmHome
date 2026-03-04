@@ -12,6 +12,50 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. 在 GitHub runner 上拉取代码
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. 安装 Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      # 3. 构建前端
+      - name: Build frontend
+        run: |
+          cd client
+          npm ci
+          npm run build
+
+      # 4. 安装后端生产依赖
+      - name: Install server dependencies
+        run: |
+          cd server
+          npm ci --only=production
+
+      # 5. 打包构建产物
+      - name: Package artifacts
+        run: |
+          tar -czf deploy.tar.gz \
+            server/ \
+            client/dist/ \
+            package.json \
+            .env.example
+
+      # 6. 传输到服务器
+      - name: Copy to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT || '22' }}
+          source: "deploy.tar.gz"
+          target: "/tmp"
+
+      # 7. SSH 部署
       - name: Deploy on server
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -19,15 +63,10 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT || '22' }}
-          command_timeout: 30m
+          command_timeout: 10m
           script: |
             set -e
             DEPLOY_PATH="${{ secrets.DEPLOY_PATH || '/root' }}"
-
-            # 清除旧的 Git 代理和镜像配置
-            git config --global --unset http.proxy || true
-            git config --global --unset https.proxy || true
-            git config --global --unset-all url.https://ghproxy.com/https://github.com/.insteadof || true
 
             # 确保 Node.js 和 pm2 已安装
             export NVM_DIR="$HOME/.nvm"
@@ -42,19 +81,12 @@ jobs:
               sudo npm install -g pm2
             fi
 
-            # 拉取最新代码
+            # 解压构建产物
+            echo ">>> 部署文件..."
             mkdir -p ${DEPLOY_PATH}
             cd ${DEPLOY_PATH}
-            if [ ! -d ".git" ]; then
-              echo ">>> 初始化仓库..."
-              git init
-              git remote add origin https://github.com/findxme/fmHome.git
-            else
-              echo ">>> 更新代码..."
-            fi
-
-            git fetch origin main
-            git reset --hard origin/main
+            tar -xzf /tmp/deploy.tar.gz
+            rm -f /tmp/deploy.tar.gz
 
             # 写入环境变量
             echo ">>> 写入 .env..."
@@ -66,18 +98,6 @@ jobs:
               '${{ secrets.DB_USER }}' \
               '${{ secrets.DB_PASSWORD }}' \
               '${{ secrets.DB_NAME }}' > .env
-
-            # 安装依赖并构建前端
-            echo ">>> 安装前端依赖并构建..."
-            cd client
-            npm ci
-            npm run build
-            cd ..
-
-            echo ">>> 安装后端依赖..."
-            cd server
-            npm ci --only=production
-            cd ..
 
             # 停止旧的 Docker 容器（如果有）
             docker compose down 2>/dev/null || true
