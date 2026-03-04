@@ -9,7 +9,7 @@
           </div>
           <div>
             <h1 class="text-xl font-bold">欢迎使用</h1>
-            <p class="text-white/80 text-sm">家庭点餐系统</p>
+            <p class="text-white/80 text-sm">干饭皇帝大</p>
           </div>
         </div>
       </div>
