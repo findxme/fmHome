@@ -2,6 +2,19 @@ import express from 'express';
 import { getDatabase } from '../mysqlDatabase.js';
 import Anthropic from '@anthropic-ai/sdk';
 
+/**
+ * AI 模块 - 智能家庭厨师助手
+ * 
+ * 少行 (AI助手) 作用：
+ * - 智能菜品推荐：根据用户口味、难度、食材偏好推荐合适的菜品
+ * - 菜单规划：AI 驱动的多天菜单规划，生成购物清单
+ * - 烹饪问答：回答用户的烹饪问题，提供专业的烹饪建议
+ * - 心情/季节推荐：根据用户心情和季节变化推荐应季菜品
+ * - 食材成菜：基于现有食材生成菜谱方案
+ * 
+ * 技术栈：Claude API (Anthropic) + Express + MySQL
+ */
+
 const router = express.Router();
 
 // Claude AI 集成
