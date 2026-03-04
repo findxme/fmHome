@@ -26,14 +26,14 @@ jobs:
       - name: Build frontend
         run: |
           cd client
-          npm ci
+          npm install
           npm run build
 
       # 4. 安装后端生产依赖
       - name: Install server dependencies
         run: |
           cd server
-          npm ci --only=production
+          npm install --only=production
 
       # 5. 打包构建产物
       - name: Package artifacts
