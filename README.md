@@ -185,6 +185,10 @@ chmod +x server-setup.sh
 | `server-setup.sh` | 服务器环境初始化脚本 |
 | `DEPLOYMENT.md` | 详细的部署配置文档 |
 
+## 备注
+
+> 2026-03-04: 由 OpenClaw 助手添加测试备注 🎉
+
 ## License
 
 MIT
