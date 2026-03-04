@@ -29,22 +29,17 @@ jobs:
           npm install
           npm run build
 
-      # 4. 安装后端生产依赖
-      - name: Install server dependencies
-        run: |
-          cd server
-          npm install --only=production
-
-      # 5. 打包构建产物
+      # 4. 打包构建产物（不含 node_modules）
       - name: Package artifacts
         run: |
           tar -czf deploy.tar.gz \
+            --exclude='node_modules' \
             server/ \
             client/dist/ \
             package.json \
             .env.example
 
-      # 6. 传输到服务器
+      # 5. 传输到服务器
       - name: Copy to server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -55,7 +50,7 @@ jobs:
           source: "deploy.tar.gz"
           target: "/tmp"
 
-      # 7. SSH 部署
+      # 6. SSH 部署
       - name: Deploy on server
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -87,6 +82,12 @@ jobs:
             cd ${DEPLOY_PATH}
             tar -xzf /tmp/deploy.tar.gz
             rm -f /tmp/deploy.tar.gz
+
+            # 用淘宝镜像安装后端依赖
+            echo ">>> 安装后端依赖..."
+            cd server
+            npm install --only=production --registry=https://registry.npmmirror.com
+            cd ..
 
             # 写入环境变量
             echo ">>> 写入 .env..."
