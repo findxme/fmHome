@@ -55,6 +55,18 @@ jobs:
               '${{ secrets.DB_PASSWORD }}' \
               '${{ secrets.DB_NAME }}' > .env
 
+            # 配置 Docker 镜像加速（国内服务器访问 Docker Hub）
+            echo ">>> 配置 Docker 镜像加速..."
+            sudo mkdir -p /etc/docker
+            if [ ! -f /etc/docker/daemon.json ] || ! grep -q registry-mirrors /etc/docker/daemon.json; then
+              echo '{"registry-mirrors":["https://docker.1ms.run","https://docker.xuanyuan.me"]}' | sudo tee /etc/docker/daemon.json
+              sudo systemctl daemon-reload
+              sudo systemctl restart docker
+              echo ">>> Docker 镜像加速已配置"
+            else
+              echo ">>> Docker 镜像加速已存在，跳过"
+            fi
+
             # 停止旧容器
             echo ">>> 停止旧容器..."
             docker compose down || true
