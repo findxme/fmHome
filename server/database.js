@@ -226,6 +226,51 @@ export async function initDatabase() {
     )
   `);
 
+  // 待办事项表
+  await pool.execute(`
+    CREATE TABLE IF NOT EXISTS todos (
+      id INT PRIMARY KEY AUTO_INCREMENT,
+      title VARCHAR(255) NOT NULL,
+      description TEXT,
+      is_completed TINYINT DEFAULT 0,
+      due_date DATE,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    )
+  `);
+
+  // 签到表
+  await pool.execute(`
+    CREATE TABLE IF NOT EXISTS checkins (
+      id INT PRIMARY KEY AUTO_INCREMENT,
+      checkin_date DATE NOT NULL,
+      streak_count INT DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(checkin_date)
+    )
+  `);
+
+  // 购物模板表
+  await pool.execute(`
+    CREATE TABLE IF NOT EXISTS shopping_templates (
+      id VARCHAR(255) PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      icon VARCHAR(50) DEFAULT '📋',
+      items TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // 采购历史表
+  await pool.execute(`
+    CREATE TABLE IF NOT EXISTS purchase_history (
+      id INT PRIMARY KEY AUTO_INCREMENT,
+      items TEXT,
+      purchased_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_purchased_at (purchased_at)
+    )
+  `);
+
   // 创建索引
   try { await pool.execute('CREATE INDEX idx_dishes_category ON dishes(category)'); } catch (e) { if (e.code !== 'ER_DUP_KEYNAME') throw e; }
   try { await pool.execute('CREATE INDEX idx_dishes_difficulty ON dishes(difficulty)'); } catch (e) { if (e.code !== 'ER_DUP_KEYNAME') throw e; }
