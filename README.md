@@ -192,3 +192,5 @@ chmod +x server-setup.sh
 ## License
 
 MIT
+
+<!-- Issue #14: 测试备注 - 2026-03-04 -->
