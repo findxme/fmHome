@@ -51,14 +51,14 @@
             </div>
             <div class="flex items-center gap-3" @click.stop>
               <button
-                @click="updateQuantity(item.id, item.quantity - 1)"
+                @click="updateQuantity(item.dish_id, item.quantity - 1)"
                 class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-90 transition-all"
               >
                 -
               </button>
               <span class="w-8 text-center font-medium dark:text-white">{{ item.quantity }}</span>
               <button
-                @click="updateQuantity(item.id, item.quantity + 1)"
+                @click="updateQuantity(item.dish_id, item.quantity + 1)"
                 class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-90 transition-all"
               >
                 +
