@@ -111,7 +111,7 @@ const generateList = async () => {
   
   try {
     // 清空旧的购物清单，保存新的
-    await shoppingApi.save({ items: listData })
+    await shoppingApi.save({ date: new Date().toISOString().split('T')[0], items: listData })
     router.push('/shopping-list')
   } catch (e) {
         // 错误处理
