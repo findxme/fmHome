@@ -8,15 +8,15 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <h1 class="text-xl font-bold text-gray-800 dark:text-white">📋 每日菜单</h1>
+        <h1 class="text-xl font-bold text-gray-800 dark:text-white">🍽️ 今天吃什么</h1>
       </div>
     </header>
 
     <div class="max-w-4xl mx-auto px-4 py-6">
       <div v-if="cartItems.length === 0" class="text-center py-16">
-        <div class="text-6xl mb-4">📋</div>
-        <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">今日菜单是空的</h2>
-        <p class="text-gray-500 dark:text-gray-400 mb-6">去首页选择今日的菜品吧</p>
+        <div class="text-6xl mb-4">🛒</div>
+        <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">还没有选择菜品</h2>
+        <p class="text-gray-500 dark:text-gray-400 mb-6">去菜单页选择你喜欢的菜品吧</p>
         <button @click="$router.push('/')" class="px-6 py-3 bg-accent-500 text-white rounded-xl font-medium">
           去点餐
         </button>
@@ -25,7 +25,7 @@
       <div v-else>
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-lg font-semibold text-gray-800 dark:text-white">
-            今日已选 {{ cartItems.length }} 道菜
+            已选 {{ cartItems.length }} 道菜
           </h2>
           <button @click="clearCart" class="text-red-500 text-sm hover:text-red-600">
             清空
@@ -88,7 +88,7 @@ const cartItems = computed(() => store.cart)
 
 const goToDish = (id) => {
   if (id) {
-    router.push(\`/dish/\${id}\`)
+    router.push(`/dish/${id}`)
   }
 }
 
