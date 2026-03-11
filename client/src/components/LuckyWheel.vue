@@ -10,7 +10,7 @@
         <div class="absolute inset-0 bg-gradient-to-br from-accent-400 to-accent-600"></div>
         <div class="relative z-10 text-center p-4">
           <div class="text-4xl mb-2">{{ currentDish?.icon || '🍽️' }}</div>
-          <div class="text-white font-bold text-lg">{{ currentDish?.name || '今天吃什么' }}</div>
+          <div class="text-white font-bold text-lg">{{ currentDish?.name || '菜单' }}</div>
         </div>
       </div>
 
