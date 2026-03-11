@@ -1,5 +1,5 @@
 import express from 'express';
-import { getDatabase } from '../mysqlDatabase.js';
+import { getDatabase } from '../database.js';
 import Anthropic from '@anthropic-ai/sdk';
 
 const router = express.Router();
