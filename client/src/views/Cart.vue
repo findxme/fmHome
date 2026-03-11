@@ -9,10 +9,12 @@
           </svg>
         </button>
         <h1 class="text-xl font-bold text-gray-800 dark:text-white">📋 菜单</h1>
+        <div class="ml-auto text-sm text-gray-400">下拉刷新</div>
       </div>
     </header>
 
-    <div class="max-w-4xl mx-auto px-4 py-6">
+    <PullRefresh @refresh="handleRefresh">
+      <div class="max-w-4xl mx-auto px-4 py-6">
       <div v-if="cartItems.length === 0" class="text-center py-16">
         <div class="text-6xl mb-4">🛒</div>
         <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">还没有选择菜品</h2>
@@ -92,6 +94,7 @@
         </button>
       </div>
     </div>
+    </PullRefresh>
   </div>
 </template>
 
@@ -100,11 +103,17 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDishStore } from '@/stores/dishes'
 import { shoppingApi } from '@/api'
+import PullRefresh from '@/components/PullRefresh.vue'
 
 const router = useRouter()
 const store = useDishStore()
 
 const cartItems = computed(() => store.cart)
+
+// 下拉刷新 - 重新加载菜品数据
+const handleRefresh = async () => {
+  await store.loadDishes(true)
+}
 
 // 计算食材汇总
 const ingredientSummary = computed(() => {
@@ -172,11 +181,38 @@ const generateList = async () => {
     })
   }
   
+  const today = new Date().toISOString().split('T')[0]
+  
   try {
-    await shoppingApi.save({ 
-      date: new Date().toISOString().split('T')[0], 
-      items: listData 
-    })
+    // 先查询今天是否已有购物清单
+    const existingRes = await shoppingApi.get(today)
+    const existingList = existingRes.data?.data
+    
+    if (existingList && existingList.id) {
+      // 合并现有清单和新清单
+      const existingItems = existingList.items || []
+      const mergedItems = [...existingItems]
+      
+      // 添加新项目（去重）
+      listData.forEach(newItem => {
+        const existIndex = mergedItems.findIndex(e => e.name === newItem.name)
+        if (existIndex === -1) {
+          mergedItems.push(newItem)
+        } else {
+          // 如果已存在，增加数量
+          mergedItems[existIndex].quantity = (mergedItems[existIndex].quantity || 1) + (newItem.quantity || 1)
+        }
+      })
+      
+      // 更新现有清单
+      await shoppingApi.update(existingList.id, mergedItems)
+    } else {
+      // 创建新清单
+      await shoppingApi.save({ 
+        date: today, 
+        items: listData 
+      })
+    }
     router.push('/shopping-list')
   } catch (e) {
     // 错误处理

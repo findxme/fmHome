@@ -415,7 +415,14 @@ onMounted(async () => {
   try {
     const res = await familyApi.get()
     if (res.data?.data?.members) {
-      familyMembers.value = res.data.data.members
+      // 映射后端字段名到前端字段名
+      familyMembers.value = res.data.data.members.map(m => ({
+        id: m.id,
+        name: m.member_name || m.name,
+        title: m.title || '家庭成员',
+        avatar: m.avatar || '😎',
+        color: m.color || '#a7f3d0'
+      }))
     }
   } catch (e) {
     // 加载失败
@@ -465,27 +472,36 @@ const showToast = (icon, message) => {
 
 const addMember = async () => {
   if (newMember.name) {
-    const member = {
-      id: uuidv4(),
-      name: newMember.name,
-      title: newMember.title || '家庭成员',
-      avatar: newMember.avatar,
-      color: colors[Math.floor(Math.random() * colors.length)]
-    }
-    
     try {
       // 保存到数据库
-      await familyApi.addMember({
-        name: member.name,
-        title: member.title,
-        avatar: member.avatar,
-        color: member.color
+      const res = await familyApi.addMember({
+        name: newMember.name,
+        title: newMember.title || '家庭成员',
+        avatar: newMember.avatar,
+        color: colors[Math.floor(Math.random() * colors.length)]
       })
-      // 更新本地列表
-      familyMembers.value.push(member)
+      // 使用后端返回的成员数据更新本地列表
+      if (res.data?.members) {
+        // 后端返回最新成员列表，取最后一个（刚添加的）
+        const newMemberFromDb = res.data.members[res.data.members.length - 1]
+        familyMembers.value.push({
+          id: newMemberFromDb.id,
+          name: newMemberFromDb.member_name,
+          title: newMemberFromDb.title || '家庭成员',
+          avatar: newMemberFromDb.avatar || '😎',
+          color: newMemberFromDb.color || '#a7f3d0'
+        })
+      }
       showToast('✅', '成员添加成功')
     } catch (e) {
       // 即使API失败，也添加到本地
+      const member = {
+        id: uuidv4(),
+        name: newMember.name,
+        title: newMember.title || '家庭成员',
+        avatar: newMember.avatar,
+        color: colors[Math.floor(Math.random() * colors.length)]
+      }
       familyMembers.value.push(member)
       showToast('⚠️', '已添加，稍后同步')
     }
