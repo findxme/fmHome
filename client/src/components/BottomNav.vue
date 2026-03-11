@@ -70,7 +70,7 @@ const navItems = [
   { name: '首页', icon: '🏠', route: '/', badge: false },
   { name: '清单', icon: '📝', route: '/shopping-list', badge: false },
   { name: '家庭厨房', icon: '👨‍👩‍👧', route: '/family', badge: false },
-  { name: '今天吃什么', icon: '🍽️', route: '/cart', badge: true },
+  { name: '菜单', icon: '📋', route: '/cart', badge: true },
   { name: '我的', icon: '👤', route: '/profile', badge: false },
 ]
 

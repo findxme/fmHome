@@ -1,5 +1,6 @@
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+    <PullRefresh @refresh="handleRefresh">
     <!-- 顶部导航 -->
     <header class="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-30 transition-colors duration-300 pt-safe">
       <div class="max-w-4xl mx-auto px-4 pb-4">
@@ -191,6 +192,7 @@
         </div>
       </div>
     </transition>
+    </PullRefresh>
   </div>
 </template>
 
@@ -199,6 +201,7 @@ import { ref, computed, inject, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDishStore } from '@/stores/dishes'
 import DishCard from '@/components/DishCard.vue'
+import PullRefresh from '@/components/PullRefresh.vue'
 
 const router = useRouter()
 const dishStore = useDishStore()
@@ -342,6 +345,11 @@ const viewDish = (dish) => {
 onMounted(() => {
   dishStore.loadDishes()
 })
+
+// 下拉刷新
+const handleRefresh = async () => {
+  await dishStore.loadDishes(true)
+}
 </script>
 
 <style scoped>

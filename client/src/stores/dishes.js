@@ -12,7 +12,11 @@ export const useDishStore = defineStore('dishes', () => {
   const preferences = ref({ taste: '不限', difficulty: '不限' })
 
   // 加载菜品列表 - 从 MySQL 获取
-  const loadDishes = async () => {
+  const loadDishes = async (forceRefresh = false) => {
+    if (forceRefresh) {
+      // 强制刷新时清空缓存
+      dishes.value = []
+    }
     loading.value = true
     try {
       // 从 API 加载菜品

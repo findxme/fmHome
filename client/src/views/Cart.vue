@@ -8,7 +8,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <h1 class="text-xl font-bold text-gray-800 dark:text-white">🍽️ 今天吃什么</h1>
+        <h1 class="text-xl font-bold text-gray-800 dark:text-white">📋 菜单</h1>
       </div>
     </header>
 

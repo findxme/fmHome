@@ -1,5 +1,6 @@
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+    <PullRefresh @refresh="handleRefresh">
     <!-- 顶部导航 -->
     <header class="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-30 transition-colors duration-300 pt-safe">
       <div class="max-w-4xl mx-auto px-4 pb-3">
@@ -162,6 +163,7 @@
       </div>
     </div>
   </div>
+    </PullRefresh>
 </template>
 
 <script setup>
@@ -170,6 +172,7 @@ import { useRouter } from 'vue-router'
 import { useDishStore } from '@/stores/dishes'
 import { shoppingApi, templateApi, historyApi } from '@/api'
 import ShoppingListOptimized from '@/components/ShoppingListOptimized.vue'
+import PullRefresh from '@/components/PullRefresh.vue'
 
 const router = useRouter()
 const store = useDishStore()
@@ -353,5 +356,11 @@ const clearList = async () => {
   } catch (e) {
         // 错误处理
   }
+}
+
+// 下拉刷新
+const handleRefresh = async () => {
+  await loadShoppingList()
+  await loadTemplates()
 }
 </script>
