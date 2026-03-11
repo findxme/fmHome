@@ -121,12 +121,14 @@ router.post('/refresh-code', async (req, res) => {
   }
 });
 
-// 移除家庭成员
+// 移除家庭成员 (已弃用，使用 /members/:id)
 router.delete('/', async (req, res) => {
   const db = getDatabase();
-  const { id } = req.params;
+  const { id } = req.query;
   try {
-    await db.prepare('DELETE FROM family_members WHERE id = ? AND role != "admin"').run(id);
+    if (id) {
+      await db.prepare('DELETE FROM family_members WHERE id = ? AND role != "admin"').run(id);
+    }
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
