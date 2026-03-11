@@ -188,10 +188,22 @@ export async function initDatabase() {
       id INT PRIMARY KEY AUTO_INCREMENT,
       family_id VARCHAR(255) NOT NULL,
       member_name VARCHAR(255) NOT NULL,
+      title VARCHAR(100) DEFAULT '家庭成员',
+      avatar VARCHAR(50) DEFAULT '😎',
+      color VARCHAR(50) DEFAULT '#a7f3d0',
       role VARCHAR(50) DEFAULT 'member',
       joined_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // 确保字段存在（兼容旧表）
+  try {
+    await pool.execute('ALTER TABLE family_members ADD COLUMN IF NOT EXISTS title VARCHAR(100) DEFAULT "家庭成员"');
+    await pool.execute('ALTER TABLE family_members ADD COLUMN IF NOT EXISTS avatar VARCHAR(50) DEFAULT "😎"');
+    await pool.execute('ALTER TABLE family_members ADD COLUMN IF NOT EXISTS color VARCHAR(50) DEFAULT "#a7f3d0"');
+  } catch (e) {
+    // 字段可能已存在，忽略错误
+  }
 
   await pool.execute(`
     CREATE TABLE IF NOT EXISTS ai_conversations (

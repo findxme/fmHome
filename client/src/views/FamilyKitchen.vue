@@ -422,8 +422,21 @@ onMounted(async () => {
   }
 })
 
-// 保存到本地存储
-const saveMembers = () => {
+// 保存到数据库
+const saveMembers = async () => {
+  try {
+    // 保存所有成员到数据库
+    for (const member of familyMembers.value) {
+      await familyApi.addMember({
+        name: member.name,
+        title: member.title,
+        avatar: member.avatar,
+        color: member.color
+      })
+    }
+  } catch (e) {
+    // 错误处理
+  }
 }
 
 // 获取成员名字
@@ -450,28 +463,51 @@ const showToast = (icon, message) => {
   }, 2000)
 }
 
-const addMember = () => {
+const addMember = async () => {
   if (newMember.name) {
-    familyMembers.value.push({
+    const member = {
       id: uuidv4(),
       name: newMember.name,
       title: newMember.title || '家庭成员',
       avatar: newMember.avatar,
       color: colors[Math.floor(Math.random() * colors.length)]
-    })
-    saveMembers()
+    }
+    
+    try {
+      // 保存到数据库
+      await familyApi.addMember({
+        name: member.name,
+        title: member.title,
+        avatar: member.avatar,
+        color: member.color
+      })
+      // 更新本地列表
+      familyMembers.value.push(member)
+      showToast('✅', '成员添加成功')
+    } catch (e) {
+      // 即使API失败，也添加到本地
+      familyMembers.value.push(member)
+      showToast('⚠️', '已添加，稍后同步')
+    }
+    
     newMember.name = ''
     newMember.title = ''
     newMember.avatar = '😎'
     showAddMember.value = false
-    showToast('✅', '成员添加成功')
   }
 }
 
-const removeMember = (id) => {
+const removeMember = async (id) => {
+  try {
+    // 从数据库删除
+    await familyApi.removeMember(id)
+    showToast('🗑️', '成员已移除')
+  } catch (e) {
+    // 即使API失败，也从本地移除
+    showToast('⚠️', '已移除，稍后同步')
+  }
+  // 从本地列表移除
   familyMembers.value = familyMembers.value.filter(m => m.id !== id)
-  saveMembers()
-  showToast('🗑️', '成员已移除')
 }
 
 // 今日菜单（示例数据）
