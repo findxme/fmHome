@@ -75,6 +75,6 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(distPath, 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`🍽️ 家庭点餐服务已启动: http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🍽️ 家庭点餐服务已启动: http://0.0.0.0:${PORT}`);
 });
