@@ -44,16 +44,7 @@ app.use(express.static(distPath, {
   lastModified: true
 }));
 
-// API缓存头 - 减少重复请求
-app.use('/api', (req, res, next) => {
-  if (req.method === 'POST') {
-    return next();
-  }
-  if (req.method === 'GET') {
-    res.set('Cache-Control', 'public, max-age=300');
-  }
-  next();
-});
+// API 不使用缓存，确保数据实时同步
 
 // 路由
 app.use('/api/dishes', dishRoutes);
