@@ -22,7 +22,7 @@ router.post('/create', async (req, res) => {
 
     await db.prepare(`
       INSERT INTO families (id, name, invite_code, invite_expires_at)
-      VALUES (?, ?, ?, datetime('now', '+7 days'))
+      VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 7 DAY))
     `).run(familyId, name, inviteCode);
 
     // 添加创建者为管理员
@@ -49,7 +49,7 @@ router.post('/join', async (req, res) => {
     const family = await db.prepare(`
       SELECT * FROM families
       WHERE invite_code = ?
-      AND invite_expires_at > datetime('now')
+      AND invite_expires_at > NOW()
     `).get(invite_code);
 
     if (!family) {
@@ -112,7 +112,7 @@ router.post('/refresh-code', async (req, res) => {
     const newCode = generateInviteCode();
     await db.prepare(`
       UPDATE families
-      SET invite_code = ?, invite_expires_at = datetime('now', '+7 days')
+      SET invite_code = ?, invite_expires_at = DATE_ADD(NOW(), INTERVAL 7 DAY)
       WHERE id = (SELECT id FROM families LIMIT 1)
     `).run(newCode);
     res.json({ success: true, invite_code: newCode });
@@ -129,6 +129,51 @@ router.delete('/', async (req, res) => {
     if (id) {
       await db.prepare('DELETE FROM family_members WHERE id = ? AND role != "admin"').run(id);
     }
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 添加家庭成员
+router.post('/members', async (req, res) => {
+  const db = getDatabase();
+  const { member_name, title, avatar, color } = req.body;
+
+  try {
+    // 获取当前家庭
+    const family = await db.prepare('SELECT * FROM families LIMIT 1').get();
+    if (!family) {
+      return res.json({ success: false, error: '请先创建家庭' });
+    }
+
+    // 检查是否已是成员
+    const existing = await db.prepare(`
+      SELECT * FROM family_members WHERE family_id = ? AND member_name = ?
+    `).get(family.id, member_name);
+
+    if (existing) {
+      return res.json({ success: false, error: '该成员已存在' });
+    }
+
+    await db.prepare(`
+      INSERT INTO family_members (family_id, member_name, title, avatar, color, role)
+      VALUES (?, ?, ?, ?, ?, 'member')
+    `).run(family.id, member_name, title || '家庭成员', avatar || '😎', color || '#a7f3d0');
+
+    const members = await db.prepare('SELECT * FROM family_members WHERE family_id = ?').all(family.id);
+    res.json({ success: true, members });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 删除家庭成员
+router.delete('/members/:id', async (req, res) => {
+  const db = getDatabase();
+  const { id } = req.params;
+  try {
+    await db.prepare('DELETE FROM family_members WHERE id = ? AND role != "admin"').run(id);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
