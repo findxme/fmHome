@@ -197,17 +197,38 @@ const clearCart = () => {
   store.clearCart()
 }
 
+// 根据食材名称和单位生成稳定的 ID
+const generateIngredientId = (name, unit = '') => {
+  const normalizedUnit = unit.replace(/[\d.\s]/g, '').trim()
+  const baseStr = `${name}_${normalizedUnit}`.toLowerCase()
+  let hash = 0
+  for (let i = 0; i < baseStr.length; i++) {
+    const char = baseStr.charCodeAt(i)
+    hash = ((hash << 5) - hash) + char
+    hash = hash & hash
+  }
+  return `ing_${Math.abs(hash).toString(36)}_${name.replace(/\s+/g, '_')}`
+}
+
 const generateList = async () => {
   // 生成购物清单，包含食材汇总
-  const listData = ingredientSummary.value.map(ing => ({
-    id: `ing_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-    name: ing.name,
-    dish_name: ing.dishes.join(', '),
-    quantity: ing.count,
-    amount: ing.totalAmount,
-    checked: false
-  }))
-  
+  const listData = ingredientSummary.value.map(ing => {
+    // 提取单位用于生成稳定 ID
+    const unitMatch = ing.rawAmount?.match(/^[\d.]+\s*(.+)$/)
+    const unit = unitMatch ? unitMatch[1].trim() : ''
+    const stableId = generateIngredientId(ing.name, unit)
+
+    return {
+      id: stableId,
+      name: ing.name,
+      dish_name: ing.dishes.join(', '),
+      quantity: ing.count,
+      amount: ing.totalAmount,
+      unit: unit,
+      checked: false
+    }
+  })
+
   // 如果没有食材信息，使用菜品名称
   if (listData.length === 0) {
     cartItems.value.forEach(item => {
@@ -220,37 +241,62 @@ const generateList = async () => {
       })
     })
   }
-  
+
   const today = new Date().toISOString().split('T')[0]
-  
+
   try {
     // 先查询今天是否已有购物清单
     const existingRes = await shoppingApi.get(today)
     const existingList = existingRes.data?.data
-    
+
     if (existingList && existingList.id) {
-      // 合并现有清单和新清单
+      // 合并现有清单和新清单（基于食材名称匹配，智能合并数量）
       const existingItems = existingList.items || []
       const mergedItems = [...existingItems]
-      
-      // 添加新项目（去重）
+
+      // 添加新项目（智能去重合并）
       listData.forEach(newItem => {
-        const existIndex = mergedItems.findIndex(e => e.name === newItem.name)
+        const existIndex = mergedItems.findIndex(e =>
+          e.name === newItem.name && (e.unit === newItem.unit || !e.unit || !newItem.unit)
+        )
+
         if (existIndex === -1) {
+          // 新食材，直接添加
           mergedItems.push(newItem)
         } else {
-          // 如果已存在，增加数量
-          mergedItems[existIndex].quantity = (mergedItems[existIndex].quantity || 1) + (newItem.quantity || 1)
+          // 已存在相同食材，智能合并
+          const existing = mergedItems[existIndex]
+
+          // 合并菜品来源
+          const existingDishes = existing.dish_name?.split(', ') || []
+          const newDishes = newItem.dish_name?.split(', ') || []
+          const mergedDishes = [...new Set([...existingDishes, ...newDishes])]
+          existing.dish_name = mergedDishes.join(', ')
+
+          // 合并数量
+          existing.quantity = (existing.quantity || 1) + (newItem.quantity || 1)
+
+          // 智能合并 amount（如果有单位）
+          if (newItem.unit && existing.unit && newItem.unit === existing.unit) {
+            // 相同单位，尝试数值相加
+            const existingNum = parseFloat(existing.amount) || 0
+            const newNum = parseFloat(newItem.amount) || 0
+            if (existingNum && newNum) {
+              existing.amount = `${(existingNum + newNum).toFixed(1).replace(/\.0$/, '')}${newItem.unit}`
+            }
+          } else if (!existing.amount && newItem.amount) {
+            existing.amount = newItem.amount
+          }
         }
       })
-      
+
       // 更新现有清单
       await shoppingApi.update(existingList.id, mergedItems)
     } else {
       // 创建新清单
-      await shoppingApi.save({ 
-        date: today, 
-        items: listData 
+      await shoppingApi.save({
+        date: today,
+        items: listData
       })
     }
     router.push('/shopping-list')
