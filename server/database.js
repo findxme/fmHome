@@ -9,7 +9,7 @@ export function getPool() {
       host: process.env.DB_HOST || '8.140.209.138',
       port: parseInt(process.env.DB_PORT) || 9000,
       user: process.env.DB_USER || 'root',
-      password: process.env.DB_PASSWORD || 'fm123',
+      password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME || 'fm_home',
       waitForConnections: true,
       connectionLimit: 10,

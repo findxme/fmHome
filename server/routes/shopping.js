@@ -69,7 +69,7 @@ router.post('/', async (req, res) => {
 });
 
 // 删除购物清单
-router.delete('/', async (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
     await getDatabase().prepare('DELETE FROM shopping_lists WHERE id = ?').run(req.params.id);
     res.json({ success: true, message: '删除成功' });

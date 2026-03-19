@@ -1,12 +1,15 @@
 import mysql from 'mysql2/promise';
+import dotenv from 'dotenv';
 
-// 数据库配置
+dotenv.config();
+
+// 数据库配置 - 从环境变量读取
 const dbConfig = {
-  host: '8.140.209.138',
-  port: 9000,
-  user: 'root',
-  password: 'fm123',
-  database: 'fm_home'
+  host: process.env.DB_HOST || '8.140.209.138',
+  port: parseInt(process.env.DB_PORT) || 9000,
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME || 'fm_home'
 };
 
 async function createTables() {

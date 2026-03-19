@@ -8,7 +8,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <h1 class="text-xl font-bold text-gray-800 dark:text-white">📋 菜单</h1>
+        <h1 class="text-xl font-bold text-gray-800 dark:text-white">🛒 购物车</h1>
         <div class="ml-auto text-sm text-gray-400">下拉刷新</div>
       </div>
     </header>
@@ -118,28 +118,68 @@ const handleRefresh = async () => {
 // 计算食材汇总
 const ingredientSummary = computed(() => {
   const summary = {}
-  
+
+  // 解析数量字符串，提取数值和单位
+  const parseAmount = (amountStr) => {
+    if (!amountStr || typeof amountStr !== 'string') return null
+    const match = amountStr.match(/^([\d.]+)\s*(.+)$/)
+    if (match) {
+      return { value: parseFloat(match[1]), unit: match[2].trim() }
+    }
+    return null
+  }
+
+  // 格式化数量
+  const formatAmount = (value, unit) => {
+    return value % 1 === 0 ? `${value}${unit}` : `${value.toFixed(1)}${unit}`
+  }
+
   cartItems.value.forEach(item => {
     const quantity = item.quantity || 1
-    // 尝试从 item 获取食材信息
-    if (item.ingredients && Array.isArray(item.ingredients)) {
-      item.ingredients.forEach(ing => {
+    // 尝试从 item 获取食材信息（ingredients 在数据库中是 JSON 字符串）
+    let ingredients = item.ingredients
+    if (typeof ingredients === 'string') {
+      try {
+        ingredients = JSON.parse(ingredients)
+      } catch (e) {
+        ingredients = null
+      }
+    }
+    if (ingredients && Array.isArray(ingredients)) {
+      ingredients.forEach(ing => {
         const name = ing.name || ing
+        const amount = ing.amount || `${quantity}份`
         if (summary[name]) {
           summary[name].count += quantity
           summary[name].dishes.push(item.name)
+          // 智能合并数量
+          const parsed = parseAmount(amount)
+          const existingParsed = parseAmount(summary[name].rawAmount)
+          if (parsed && existingParsed && parsed.unit === existingParsed.unit) {
+            // 相同单位，合并数值
+            summary[name].rawAmount = formatAmount(existingParsed.value + parsed.value, parsed.unit)
+            summary[name].totalAmount = summary[name].rawAmount
+          } else {
+            // 不同单位或无法解析，追加显示
+            if (!summary[name].amounts.includes(amount)) {
+              summary[name].amounts.push(amount)
+            }
+            summary[name].totalAmount = summary[name].amounts.join(' + ')
+          }
         } else {
           summary[name] = {
             name,
             count: quantity,
-            totalAmount: ing.amount || `${quantity}份`,
+            totalAmount: amount,
+            rawAmount: amount,
+            amounts: [amount],
             dishes: [item.name]
           }
         }
       })
     }
   })
-  
+
   return Object.values(summary)
 })
 
@@ -215,8 +255,8 @@ const generateList = async () => {
     }
     router.push('/shopping-list')
   } catch (e) {
-    // 错误处理
-    router.push('/shopping-list')
+    console.error('生成购物清单失败:', e)
+    alert('生成购物清单失败，请重试')
   }
 }
 </script>
