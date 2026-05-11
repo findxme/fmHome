@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Recipe {
+  id          String       @id @default(uuid())
+  familyId    String       @default("default")
+  title       String
+  category    String?
+  difficulty  String       @default("简单")
+  cookMinutes Int?
+  cookTime    String?
+  description String?
+  tags        Json?
+  imageUrl    String?
+  sourceType  String       @default("custom")
+  tips        String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  ingredients Ingredient[]
+  steps       Step[]
+  mealPicks   MealPick[]
+}
+
+model Ingredient {
+  id       String @id @default(uuid())
+  recipeId String
+  name     String
+  amount   String?
+  category String?
+  
+  recipe   Recipe @relation(fields: [recipeId], references: [id])
+}
+
+model Step {
+  id       String @id @default(uuid())
+  recipeId String
+  orderNum Int
+  title    String?
+  content  String
+  
+  recipe   Recipe @relation(fields: [recipeId], references: [id])
+  
+  @@unique([recipeId, orderNum])
+}
+
+model MealPick {
+  id          String   @id @default(uuid())
+  familyId    String   @default("default")
+  recipeId    String
+  recipeTitle String
+  status      String   @default("active")
+  pickedDate  DateTime
+  
+  recipe      Recipe   @relation(fields: [recipeId], references: [id])
+  
+  @@unique([familyId, recipeId, pickedDate])
+}
+
+model ShoppingList {
+  id           String   @id @default(uuid())
+  familyId     String   @default("default")
+  name         String
+  amountText   String?
+  checked      Boolean  @default(false)
+  recipeTitles Json?
+  createdAt    DateTime @default(now())
+}
+
+model Purchase {
+  id           String        @id @default(uuid())
+  familyId     String        @default("default")
+  purchaseDate DateTime
+  totalAmount  Decimal       @default(0)
+  sourceType   String        @default("manual")
+  note         String?
+  createdAt    DateTime      @default(now())
+  
+  items        PurchaseItem[]
+}
+
+model PurchaseItem {
+  id         String   @id @default(uuid())
+  purchaseId String
+  name       String
+  amountText String?
+  
+  purchase   Purchase @relation(fields: [purchaseId], references: [id])
+}

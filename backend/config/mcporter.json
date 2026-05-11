@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "autoglm-browser-agent": {
+      "command": "/Users/lixinjun/.agents/skills/autoglm-browser-agent/dist/mcp_server --start_url https://www.bing.com --window_width 1456 --window_height 819 --resize_width 1456 --resize_height 819 --max_steps 100 --log_dir /Users/lixinjun/.agents/skills/autoglm-browser-agent/mcp_output --if_subagent"
+    },
+    "mcp_server_mysql": {
+      "command": "npx",
+      "args": ["-y", "@benborla29/mcp-server-mysql"],
+      "env": {
+        "ALLOW_DDL_OPERATION": "false",
+        "ALLOW_DELETE_OPERATION": "false",
+        "ALLOW_INSERT_OPERATION": "false",
+        "ALLOW_UPDATE_OPERATION": "false",
+        "MYSQL_DB": "u_integration_test",
+        "MYSQL_HOST": "rm-2zegst7f44n183i51ho.mysql.rds.aliyuncs.com",
+        "MYSQL_PASS": "6JJFkKw45*Q5o^ejKgxX40OhQsvG!",
+        "MYSQL_PORT": "3306",
+        "MYSQL_SSL": "false",
+        "MYSQL_USER": "u_integration_test_writer"
+      }
+    }
+  }
+}

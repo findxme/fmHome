@@ -1,0 +1,185 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #FFFFFF;
+  min-height: 100vh;
+  background-attachment: fixed;
+  color: #262626;
+  position: relative;
+}
+
+#app {
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+.glass-effect {
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.glass-effect-light {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+}
+
+.gradient-primary {
+  background: #1890ff;
+}
+
+.gradient-secondary {
+  background: #faad14;
+}
+
+.gradient-success {
+  background: #52c41a;
+}
+
+.text-gradient {
+  color: #1890ff;
+}
+
+.bright-button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.bright-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.12);
+}
+
+.card-hover {
+  transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(24, 144, 255, 0.06);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.2); }
+}
+
+.status-active {
+  background: #52c41a;
+  box-shadow: 0 0 4px rgba(82, 196, 26, 0.4);
+}
+
+.status-pending {
+  background: #1890ff;
+  box-shadow: 0 0 4px rgba(24, 144, 255, 0.4);
+}
+
+.status-completed {
+  background: #faad14;
+  box-shadow: 0 0 4px rgba(250, 173, 20, 0.4);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1890ff;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #52c41a;
+}
+
+input, textarea, select {
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(24, 144, 255, 0.12);
+  color: #262626;
+  transition: all 0.3s ease;
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: rgba(24, 144, 255, 0.25);
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.04);
+  outline: none;
+}
+
+input::placeholder, textarea::placeholder {
+  color: rgba(140, 140, 140, 0.5);
+}
+
+button {
+  transition: all 0.3s ease;
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+img {
+  transition: all 0.3s ease;
+}
+
+img:hover {
+  filter: brightness(1.03) saturate(1.05);
+}
+
+.badge-gradient {
+  background: #1890ff;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-success {
+  background: #52c41a;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-warning {
+  background: #faad14;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}

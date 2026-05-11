@@ -1,21 +1,45 @@
-# 家庭智能点餐系统 (Family Meal Planner)
+# fmHome
 
-一个帮助年轻小家庭解决日常吃饭困扰的智能点餐系统。
+一个家庭买菜 Web 应用，聚焦 4 个能力：
 
-> Issue #19: 给代码加个备注 - 测试任务
-
-## 功能特性
-
-- **菜单商城** - 像逛商城一样浏览和选择菜品
-- **智能推荐** - 根据口味偏好推荐菜品
-- **菜单规划** - AI智能规划一周菜单
-- **购物清单** - 自动汇总所需食材
-- **食谱详情** - 详细的制作步骤和视频教程
-- **烹饪问答** - AI解答烹饪疑问
+- 今天吃什么
+- 菜谱做法
+- 待买清单
+- 买菜记账
 
 ## 技术栈
 
-- **前端**: Vue 3 + Vite + TailwindCSS
-- **后端**: Node.js + Express
-- **数据库**: SQLite
-- **AI**: Claude API (可选)
+- **前端**: Vue 3 + Vite + Pinia + Vant
+- **后端**: Express + MySQL + Prisma
+
+## 目录
+
+- `frontend/` 前端代码
+- `backend/` 后端代码
+
+## 快速开始
+
+### 后端
+
+```bash
+cd backend
+npm install
+# 配置 DATABASE_URL 环境变量
+npx prisma migrate dev
+npm start
+```
+
+### 前端
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+前端构建后会自动输出到 `backend/public/`，由 Express 静态托管：
+
+```bash
+cd frontend
+npm run build
+```

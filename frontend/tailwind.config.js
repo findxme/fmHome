@@ -1,0 +1,55 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{vue,js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {
+      colors: {
+        primary: '#1890ff',
+        'primary-light': '#40a9ff',
+        'primary-lighter': '#69c0ff',
+        'primary-lightest': '#e6f7ff',
+        secondary: '#262626',
+        accent: '#faad14',
+        'accent-light': '#ffc53d',
+        'accent-lighter': '#fffbe6',
+        success: '#52c41a',
+        'success-light': '#73d13d',
+        'success-lighter': '#f6ffed',
+        warning: '#faad14',
+        error: '#f5222d',
+        'error-light': '#ff4d4f',
+        'error-lighter': '#fff1f0',
+        dark: '#262626',
+        light: '#FFFFFF',
+        glass: 'rgba(255, 255, 255, 0.8)',
+        'card-bg': 'rgba(255, 255, 255, 0.9)',
+        'text-primary': '#262626',
+        'text-secondary': '#8c8c8c',
+        'text-disabled': '#bfbfbf',
+        'border-base': '#d9d9d9',
+        'border-light': '#f0f0f0',
+        'background-base': '#f5f5f5',
+        'background-light': '#fafafa',
+      },
+      fontFamily: {
+        'tech': ['Orbitron', 'Inter', 'sans-serif'],
+        'body': ['Inter', 'PingFang SC', 'sans-serif'],
+      },
+      boxShadow: {
+        'bright': '0 4px 20px rgba(59, 130, 246, 0.15)',
+        'bright-strong': '0 8px 30px rgba(59, 130, 246, 0.25)',
+        'glass': '0 8px 32px rgba(0, 0, 0, 0.08)',
+        'card': '0 2px 12px rgba(0, 0, 0, 0.05)',
+      },
+      animation: {
+        'float': 'float 6s ease-in-out infinite',
+        'pulse-soft': 'pulse-soft 2s ease-in-out infinite',
+        'gradient': 'gradient 3s ease infinite',
+      },
+    },
+  },
+  plugins: [],
+}

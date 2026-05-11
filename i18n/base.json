@@ -1,0 +1,11 @@
+{
+	"ios": {
+		"name": "findxme"
+	},
+	"android": {
+		"name": "findxme"
+	},
+	"common": {
+		"name": "findxme"
+	}
+}
